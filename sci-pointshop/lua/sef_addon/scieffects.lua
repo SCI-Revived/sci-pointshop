@@ -520,9 +520,9 @@ PassiveEffects.sci_passive_flashbang = {
                 local intensity = distanceFactor * screenFactor
 
                 local duration = math.Clamp(
-                    2 + (8 * intensity),
-                    2,
-                    10
+                    1 + (4 * intensity),
+                    1,
+                    5
                 )
 
                 target:ApplyEffect("Blindness", duration)
