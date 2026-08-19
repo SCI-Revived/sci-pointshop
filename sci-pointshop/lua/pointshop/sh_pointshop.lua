@@ -9,9 +9,9 @@ PS.Config.JoinBonus            = 500    -- points awarded to players on first jo
 PS.Config.KillReward           = 100    -- base points for a kill
 PS.Config.DeathLossPercent     = 0.025  -- % of net worth lost on death. 2.5% by default.
 PS.Config.DeathLossMin         = 1      -- minimum points lost on death. minimum is 1 by default
-PS.Config.DeathLossMax         = 1000   -- maximum points lost on death. maximum is 1000 by default.
+PS.Config.DeathLossMax         = 1500   -- maximum points lost on death. maximum is 1000 by default.
 
-PS.Config.PlayReward           = 500    -- Point reward for playing on the server.
+PS.Config.PlayReward           = 200    -- Point reward for playing on the server.
 PS.Config.PlayRewardInterval   = 300	-- Seconds between reward for playing on the server.
 
 PS.Config.HeadshotBonus        = 50
