@@ -295,7 +295,7 @@ PS.Items = {
 	},
 	["sci_passive_pyromaniac"] = {
 		Name = "Pyromaniac",
-		BasePrice = 400,
+		BasePrice = 300,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
 		Icon = "hudicons/sci_passive_pyromaniac.png",
@@ -303,7 +303,7 @@ PS.Items = {
 	},
 	["sci_passive_blastshield"] = {
 		Name = "Blast Shield",
-		BasePrice = 400,
+		BasePrice = 425,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
 		Icon = "hudicons/sci_passive_blastshield.png",
@@ -327,7 +327,7 @@ PS.Items = {
 	},
 	["sci_passive_unstoppable"] = {
 		Name = "Unstoppable",
-		BasePrice = 350,
+		BasePrice = 275,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
 		Icon = "hudicons/sci_passive_unstoppable.png",
@@ -335,7 +335,7 @@ PS.Items = {
 	},
 	["sci_passive_concussion"] = {
 		Name = "Concussion",
-		BasePrice = 500,
+		BasePrice = 1000,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_OFFENSIVE,
 		Icon = "hudicons/sci_passive_concussion.png",
@@ -343,7 +343,7 @@ PS.Items = {
 	},
 	["sci_passive_backstabber"] = {
 		Name = "Backstabber",
-		BasePrice = 375,
+		BasePrice = 450,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_OFFENSIVE,
 		Icon = "hudicons/sci_passive_backstabber.png",
@@ -351,7 +351,7 @@ PS.Items = {
 	},
 	["sci_passive_flashbang"] = {
 		Name = "Flashbang",
-		BasePrice = 600,
+		BasePrice = 800,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_OFFENSIVE,
 		Icon = "hudicons/sci_passive_flashbang.png",
