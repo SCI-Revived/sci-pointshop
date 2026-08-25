@@ -48,6 +48,10 @@ end
 -- Delivery
 -- Spawns entity on the ground in front of the player, using a trace so it doesn't spawn inside geometry. Returns the spawned entity, or nil if it failed to create.
 local function SpawnEntityInFront(ply, class)
+	if not ply:CheckLimit("sents") then
+		return nil
+	end
+
 	local eye_pos = ply:EyePos()
 	local eye_dir = ply:EyeAngles():Forward()
 
@@ -62,16 +66,21 @@ local function SpawnEntityInFront(ply, class)
 	spawn_pos = spawn_pos + trace.HitNormal * 8
 
 	local ent = ents.Create(class)
-	if not IsValid(ent) then return nil end
+	if not IsValid(ent) then
+		return nil
+	end
 
 	ent:SetPos(spawn_pos)
 	ent:SetAngles(Angle(0, ply:EyeAngles().y, 0))
-	ent:Spawn()
-	ent:Activate()
 
 	if ent.SetCreator then
 		ent:SetCreator(ply)
 	end
+
+	ent:Spawn()
+	ent:Activate()
+
+	ply:AddCount("sents", ent)
 
 	if undo then
 		undo.Create(PS.GetItemDisplayName and PS.GetItemDisplayName(class) or class)
@@ -81,7 +90,7 @@ local function SpawnEntityInFront(ply, class)
 	end
 
 	if ply.AddCleanup then
-		ply:AddCleanup("props", ent)
+		ply:AddCleanup("sents", ent)
 	end
 
 	return ent
