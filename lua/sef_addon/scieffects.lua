@@ -795,3 +795,9 @@ PassiveEffects.sci_passive_splitshot = {
         }
     }
 }
+
+PassiveEffects.sci_passive_stealth = {
+    Name = "Stealth",
+    Icon = "hudicons/sci_passive_stealth.png",
+    Desc = "Attacking does not reveal your position on the minimap. Does not work while in vehicles."
+}
