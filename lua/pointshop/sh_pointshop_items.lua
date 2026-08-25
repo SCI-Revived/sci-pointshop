@@ -337,6 +337,14 @@ PS.Items = {
 		Icon = "hudicons/sci_passive_bleed.png",
 		Description = "Small chance to make target bleed when shot.",
 	},
+	["sci_passive_stealth"] = {
+		Name = "Stealth",
+		BasePrice = 700,
+		Type = PS.ITEM_TYPE_BONUS,
+		BonusType = PS.BONUS_TYPE_OFFENSIVE,
+		Icon = "hudicons/sci_passive_stealth.png",
+		Description = "Attacking does not reveal your position on the minimap. Does not work while in vehicles.",
+	},
 }
 
 
