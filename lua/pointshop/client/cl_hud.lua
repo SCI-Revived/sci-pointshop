@@ -39,7 +39,7 @@ end)
 
 local PANEL_W = 220
 local PANEL_H = 54
-local MARGIN_BOTTOM = 40
+local MARGIN_BOTTOM = 80
 
 local COLOR_BG        = Color(20, 20, 24, 210)
 local COLOR_BORDER    = Color(255, 200, 40, 255)
