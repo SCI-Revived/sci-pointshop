@@ -188,7 +188,7 @@ PS.Items = {
 		BasePrice = 1500,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_repair.png",
-		Description = "Automatically repairs props and machines in a large radius around it. Requires 200 power in order to run.",
+		Description = "Automatically repairs props and machines in a large radius around it. Requires 200 power in order to run. Does not stack if multiple are placed in the same radius.",
 	},
 	["sci_pointshop_base_turret"] = {
 		Name = "Sentry Turret",
