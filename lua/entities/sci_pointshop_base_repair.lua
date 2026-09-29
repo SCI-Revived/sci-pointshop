@@ -120,10 +120,7 @@ ENT.RepairFlatAmount = 300
 -- Fraction of a prop's OWN max health restored per pulse,
 -- added to RepairFlatAmount. E.g. a prop with 1000 max HP
 -- gets 0.03 * 1000 + 300 = 330 HP back per pulse.
-ENT.RepairPercentOfMax = 0.03
-
--- Sound played on the station each time it pulses.
-ENT.RepairPulseSound = "buttons/button14.wav"
+ENT.RepairPercentOfMax = 0.05
 
 -- Color of the reach sphere drawn while looking at the station.
 -- Bright, fairly opaque green so the repair radius actually
@@ -247,53 +244,14 @@ if SERVER then
 	end
 
 	---------------------------------------------------------
-	-- Overlap prevention: if two or more repair stations have
-	-- radii that reach each other, only one of them should
-	-- actually pulse -- otherwise props sitting in the overlap
-	-- get double (or triple, etc.) repairs per interval.
-	--
-	-- Rule: among all currently-active stations (switched on AND
-	-- powered) within reach of this one, the station with the
-	-- lowest EntIndex() is the one that pulses. Every station in
-	-- the overlapping cluster runs this same check independently
-	-- and arrives at the same answer without any shared state,
-	-- since EntIndex() is unique and consistent across all of them.
-	--
-	-- Distance is checked against the LARGER of the two stations'
-	-- RepairRadius values, since two stations can have different
-	-- radii -- if either one's reach covers the other, their
-	-- coverage areas can overlap.
+	-- Overlap handling: every active station pulses on its own
+	-- schedule, but each repaired target is stamped with the time
+	-- it was last healed by ANY station (LastStationRepair), and
+	-- DoRepairPulse skips targets healed within the cooldown window.
+	-- That way, props sitting in the overlap of several stations
+	-- only get one repair per interval, while props covered by just
+	-- one station in a chain or partial overlap still get repaired.
 	---------------------------------------------------------
-
-	function ENT:IsSeniorRepairStation()
-
-		local myIndex = self:EntIndex()
-		local myPos = self:GetPos()
-		local myRadius = self.RepairRadius or 5000
-
-		for _, other in ipairs(ents.FindByClass(self:GetClass())) do
-
-			if not IsValid(other) or other == self then continue end
-			if other:EntIndex() >= myIndex then continue end
-
-			-- Only other ACTIVE stations count as competition --
-			-- one that's switched off or unpowered isn't pulsing
-			-- anyway, so it shouldn't block this one from doing so.
-			if not other:GetNWBool("Powered", true) then continue end
-			if not other.HasPower then continue end
-
-			local otherRadius = other.RepairRadius or 5000
-			local reach = math.max(myRadius, otherRadius)
-
-			if myPos:DistToSqr(other:GetPos()) <= (reach * reach) then
-				-- A lower-indexed active station's coverage reaches
-				-- this one -- defer to it.
-				return false
-			end
-		end
-
-		return true
-	end
 
 	-- Base classes whose entities get the smaller pointshop-base
 	-- repair formula instead of the prop_physics one.
@@ -363,6 +321,13 @@ if SERVER then
 
 		local healedAny = false
 
+		-- A target healed by any station within this window is skipped,
+		-- so overlapping stations don't double-repair. Slightly under
+		-- the full interval so normal timing jitter never blocks a
+		-- station's legitimate next pulse.
+		local now = CurTime()
+		local cooldown = (self.RepairInterval or 10) * 0.9
+
 		for _, ent in ipairs(ents.FindInSphere(pulsePos, radius)) do
 
 			if not IsValid(ent) or ent == self then continue end
@@ -373,6 +338,11 @@ if SERVER then
 			-- explicit distance check too so nothing right at the
 			-- edge of a large prop/entity gets a false include.
 			if pulsePos:DistToSqr(ent:GetPos()) > radiusSqr then
+				continue
+			end
+
+			-- Already repaired by another (or this) station this interval.
+			if ent.LastStationRepair and now - ent.LastStationRepair < cooldown then
 				continue
 			end
 
@@ -396,6 +366,7 @@ if SERVER then
 				local newHealth = math.min(health + healAmount, maxHealth)
 
 				spdAddHealth(ent, newHealth - health)
+				ent.LastStationRepair = now
 
 				healedAny = true
 
@@ -415,6 +386,7 @@ if SERVER then
 
 				ent:SetHealth(newHealth)
 				ent:SetNWInt("EryHealth", newHealth)
+				ent.LastStationRepair = now
 
 				healedAny = true
 
@@ -422,7 +394,7 @@ if SERVER then
 		end
 
 		if healedAny then
-			self:EmitSound(self.RepairPulseSound or "buttons/button14.wav", 65, 100)
+			self:EmitSound("ambient/machines/pneumatic_drill_"..math.random(1,4)..".wav", 75, 100)
 		end
 	end
 
@@ -435,6 +407,10 @@ if SERVER then
 	function ENT:Think()
 
 		if not self:GetNWBool("Powered", true) or not self.HasPower then
+			-- Keep the timestamp fresh while off/unpowered so the first
+			-- tick after coming back doesn't see the entire downtime as
+			-- one giant delta and fire a burst of catch-up pulses.
+			self.LastThinkTime = CurTime()
 			self:NextThink(CurTime())
 			return true
 		end
@@ -447,15 +423,10 @@ if SERVER then
 		self.RepairCountdown = (self.RepairCountdown or self.RepairInterval or 10) - delta
 
 		if self.RepairCountdown <= 0 then
-			-- Only the senior station in an overlapping cluster
-			-- actually pulses -- but the countdown still resets
-			-- for everyone, so a junior station stays in lockstep
-			-- and is immediately ready to take over if the senior
-			-- one is removed, switched off, or loses power.
-			if self:IsSeniorRepairStation() then
-				self:DoRepairPulse()
-			end
-			self.RepairCountdown = self.RepairCountdown + (self.RepairInterval or 10)
+			self:DoRepairPulse()
+			-- Clamped so a long frame hitch can never leave the
+			-- countdown negative and trigger back-to-back pulses.
+			self.RepairCountdown = math.max(self.RepairCountdown + (self.RepairInterval or 10), 0)
 		end
 
 		self:NextThink(CurTime())
