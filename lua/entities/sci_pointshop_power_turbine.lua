@@ -25,6 +25,8 @@ ENT.Decaytime = -1
 ENT.MaxHealth = 2000
 ENT.HealthRegen = 5
 
+ENT.SpawnOffset = Vector(0, 0, 300) -- world-space offset applied 0.1s after spawning
+
 -- How much power this turbine outputs while unobstructed.
 ENT.PowerOutput = 200
 
