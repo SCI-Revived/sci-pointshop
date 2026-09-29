@@ -47,11 +47,11 @@ ENT.MinTargetSpeed = 1000
 
 ENT.MissileClass = "sci_pointshop_base_ewr_interceptor_missile"
 
-ENT.DetectionSphereColor = Color(255, 160, 40, 0) --15
-ENT.DetectionSphereColorWire = Color(255, 160, 40, 0) --200
+ENT.DetectionSphereColor = Color(255, 160, 40, 15) --15
+ENT.DetectionSphereColorWire = Color(255, 160, 40, 200) --200
 
-ENT.DeadZoneSphereColor = Color(255, 60, 60, 0) --20
-ENT.DeadZoneSphereColorWire = Color(255, 60, 60, 0) --200
+ENT.DeadZoneSphereColor = Color(255, 60, 60, 20) --20
+ENT.DeadZoneSphereColorWire = Color(255, 60, 60, 200) --200
 
 ENT.SphereDrawDistance = 16000
 
