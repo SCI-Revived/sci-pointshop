@@ -25,6 +25,8 @@ ENT.MaxHealth = 500
 ENT.HealthRegen = 1 -- health regenerated per second
 ENT.CustomMass = 200
 
+ENT.SpawnOffset = Vector(0, 0, 0) -- world-space offset applied 0.1s after spawning
+
 if SERVER then
 	util.AddNetworkString("ery_entity_menu_open")
 	util.AddNetworkString("ery_entity_menu_action")
@@ -87,6 +89,20 @@ if SERVER then
 				phys:Wake()
 			end
 		end)
+
+		-- Teleport by SpawnOffset shortly after spawning
+		if self.SpawnOffset and self.SpawnOffset ~= vector_origin then
+			timer.Simple(0.1, function()
+				if not IsValid(self) then return end
+
+				self:SetPos(self:GetPos() + self.SpawnOffset)
+
+				local p = self:GetPhysicsObject()
+				if IsValid(p) then
+					p:Wake()
+				end
+			end)
+		end
 
 		if self.Decaytime and self.Decaytime > 0 then
 			timer.Create("DecayTimer_" .. self:EntIndex(), self.Decaytime, 1, function()
