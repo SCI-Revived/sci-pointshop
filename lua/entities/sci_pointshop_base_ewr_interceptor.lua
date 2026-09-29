@@ -29,6 +29,8 @@ ENT.MaxHealth = 1250
 ENT.HealthRegen = 5
 ENT.CustomMass = 400
 
+ENT.SpawnOffset = Vector(0, 0, 100) -- world-space offset applied 0.1s after spawning
+
 ENT.CollideSounds = {
 	"physics/metal/metal_box_impact_bullet1.wav",
 	"physics/metal/metal_box_impact_bullet2.wav",
