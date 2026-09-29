@@ -237,7 +237,7 @@ function PS.KillTracker.ProcessKill(killer, victim, ksid, vsid)
 	if dist <= PS.Config.PointBlankRange then
 		total = total + PS.Config.PointBlankBonus
 		table.insert(breakdown, { label = "Point Blank", amount = PS.Config.PointBlankBonus })
-	elseif dist >= PS.Config.LongshotThreshold then
+	elseif dist >= PS.Config.LongshotThreshold and not (IsValid(killer) and killer:InVehicle()) then
 		local extra_units = dist - PS.Config.LongshotThreshold
 		local increments = math.floor(extra_units / PS.Config.LongshotUnit)
 		if increments > 0 then

@@ -78,33 +78,124 @@ end
 PS.Items = {
 
 	---------------- Entities ----------------
-	["sci_pointshop_beacon"] = {
-		Name = "Beacon",
-		BasePrice = 7500,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "sef_icons/fallimmune.png",
-		Description = "Grants positive status effects to players in proximity. Can be customized.",
-	},
-	["gb5_proj_howitzer_shell_in"] = {
-		Name = "Howitzer Shell (Incendiary)",
-		BasePrice = 1250,
+	["gb5_heavy_b_t12"] = {
+		Name = "T12 Cloudmaker",
+		BasePrice = 15000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "icon16/bomb.png",
-		Description = "Incendiary shell, sets things on fire.",
+		Description = "Huge earthquake bomb with massive damage but a moderate blast radius. Meant for cracking the strongest of bases.",
 	},
-	["gb5_proj_howitzer_shell_cl"] = {
-		Name = "Chlorine Shell",
+	["gb5_chemical_napalm"] = {
+		Name = "Napalm Bomb",
 		BasePrice = 1750,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "icon16/bomb.png",
-		Description = "Chlorine gas shell, leaves a cloud of gas that blinds and damages players inside. Ignores armor.",
+		Description = "Napalm bomb that ignites a large area. Will burn players to a crisp.",
 	},
-	["gb5_nuclear_davycrockett"] = {
-		Name = "Davy Crockett",
+	["gb5_heavy_b_1000lb"] = {
+		Name = "XMI HEB 1000lb",
 		BasePrice = 10000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "icon16/bomb.png",
-		Description = "Miniature nuclear artillery shell with a devastating blast.",
+		Description = "Large bomb with high damage but a moderate blast radius. Will deal significant damage to bases.",
+	},
+	["gb5_heavy_b_thermobaric"] = {
+		Name = "GXM-11 Thermobaric",
+		BasePrice = 3500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "icon16/bomb.png",
+		Description = "Thermobaric bomb with a large blast radius. Will deal average damage to bases but high anti-personnel damage.",
+	},
+	["gb5_proj_howitzer_shell_in"] = {
+		Name = "Howitzer Shell (Incendiary)",
+		BasePrice = 350,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "icon16/bomb.png",
+		Description = "Incendiary artillery shell, sets players on fire.",
+	},
+	["gb5_proj_howitzer_shell_cl"] = {
+		Name = "Chlorine Shell",
+		BasePrice = 500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "icon16/bomb.png",
+		Description = "Chlorine gas artillery shell, leaves a cloud of gas that blinds and damages players inside. Ignores armor.",
+	},
+	["sci_pointshop_base_beacon"] = {
+		Name = "Beacon",
+		BasePrice = 3500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_beacon.png",
+		Description = "Grants positive status effects to players in proximity. Can be customized. Requires 125 power in order to run.",
+	},
+	["sci_pointshop_fuelgenerator"] = {
+		Name = "Fuel Generator",
+		BasePrice = 1000,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_fuelgenerator.png",
+		Description = "Provides 250 power for your machines while active. Requires fuel in order to run. Can be placed anywhere.",
+	},
+	["sci_pointshop_fuel"] = {
+		Name = "Fuel Can",
+		BasePrice = 100,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_fuel.png",
+		Description = "Provides 10 minutes of fuel for the Fuel Generator.",
+	},
+	["sci_pointshop_power_turbine"] = {
+		Name = "Wind Turbine",
+		BasePrice = 750,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_power_turbine.png",
+		Description = "Provides 200 power for your machines while active. Must be unobstructed in order to run.",
+	},
+	["sci_pointshop_power_rtg"] = {
+		Name = "Radioisotope Generator",
+		BasePrice = 1750,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_power_rtg.png",
+		Description = "Provides 125 power for your machines while active. Can be placed anywhere.",
+	},
+	["sci_pointshop_base_ewr_interceptor"] = {
+		Name = "Interceptor",
+		BasePrice = 2000,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_ewr_interceptor.png",
+		Description = "Motion based SAM platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
+	},
+	["sci_pointshop_base_ewr_screen"] = {
+		Name = "EWR Screen",
+		BasePrice = 1500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_ewr_screen.png",
+		Description = "Detects spawned munitions and displays their location in world coordinates. Requires 50 power in order to run.",
+	},
+	["sci_pointshop_base_mainframe"] = {
+		Name = "Base Mainframe",
+		BasePrice = 500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_mainframe.png",
+		Description = "The heart of your base. Needed to link power generators and machines.",
+	},
+	["sci_pointshop_base_radar_screen"] = {
+		Name = "Radar Screen",
+		BasePrice = 2250,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_radar_screen.png",
+		Description = "Displays the location of players relative to it. Players must be manually whitelisted to be considered friendly. Requires 50 power in order to run.",
+	},
+	["sci_pointshop_base_repair"] = {
+		Name = "Auto-Repair Station",
+		BasePrice = 1500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_repair.png",
+		Description = "Automatically repairs props and machines in a large radius around it. Requires 200 power in order to run.",
+	},
+	["sci_pointshop_base_turret"] = {
+		Name = "Sentry Turret",
+		BasePrice = 1250,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_turret.png",
+		Description = "Automatically targets hostile players while active. Players must be manually whitelisted to be considered friendly. Requires 100 power in order to run.",
 	},
 	---------------- Weapons ----------------
 	["m9k_minigun"] = {
@@ -112,7 +203,14 @@ PS.Items = {
 		BasePrice = 1000,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_minigun.png",
-		Description = "Handheld minigun with extremely fast firerate and high ammo capacity.",
+		Description = "Handheld minigun with extremely fast firerate and high ammo capacity. Very heavy.",
+	},
+	["m9k_barret_m82"] = {
+		Name = "Barret M82",
+		BasePrice = 1000,
+		Type = PS.ITEM_TYPE_WEAPON,
+		Icon = "entities/m9k_barret_m82.png",
+		Description = ".50 Caliber anti-materiel rifle. Capable of destroying light cover and damaging vehicles.",
 	},
 	["m9k_usas"] = {
 		Name = "USAS",
@@ -126,14 +224,7 @@ PS.Items = {
 		BasePrice = 450,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_striker12.png",
-		Description = "Full auto shotgun with a 12 round drum mag. Has a fast firerate but a slow reload.",
-	},
-	["m9k_davy_crockett"] = {
-		Name = "Davy Crockett",
-		BasePrice = 100000,
-		Type = PS.ITEM_TYPE_WEAPON,
-		Icon = "entities/m9k_davy_crockett.png",
-		Description = "Recoilless tactical nuke launcher.",
+		Description = "Full auto shotgun with a 12 round drum mag. Has a fast firerate but a slow reload and high recoil.",
 	},
 	["m9k_ex41"] = {
 		Name = "EX41",
@@ -147,14 +238,14 @@ PS.Items = {
 		BasePrice = 5000,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_m202.png",
-		Description = "Multishot explosive rocket launcher.",
+		Description = "Multishot explosive rocket launcher. Mixed anti-infantry and anti-armor capability.",
 	},
 	["m9k_matador"] = {
 		Name = "Matador",
 		BasePrice = 1000,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_matador.png",
-		Description = "Single shot rocket launcher.",
+		Description = "Single shot rocket launcher specialized for anti-personnel use.",
 	},
 	["m9k_milkormgl"] = {
 		Name = "Milkor Mk1",
@@ -165,10 +256,10 @@ PS.Items = {
 	},
 	["m9k_nerve_gas"] = {
 		Name = "Nerve Gas",
-		BasePrice = 750,
+		BasePrice = 1000,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_nerve_gas.png",
-		Description = "Hand thrown capsule that releases a powerful nerve agent upon breaking.",
+		Description = "Hand thrown capsule that releases a powerful nerve agent upon impact.",
 	},
 	["m9k_orbital_strike"] = {
 		Name = "Orbital Strike Marker",
@@ -182,7 +273,7 @@ PS.Items = {
 		BasePrice = 125,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_proxy_mine.png",
-		Description = "Can be attached to surfaces. Explodes when a valid target comes into proximity.",
+		Description = "Can be attached to surfaces. Explodes when a valid target comes into proximity. Can be used as an anti-tank mine.",
 	},
 	---------------- Bonuses (passive effects) ----------------
 	["sci_passive_lifeinsurance"] = {

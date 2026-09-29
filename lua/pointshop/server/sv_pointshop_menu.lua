@@ -48,6 +48,7 @@ end
 -- Delivery
 -- Spawns entity on the ground in front of the player, using a trace so it doesn't spawn inside geometry. Returns the spawned entity, or nil if it failed to create.
 local function SpawnEntityInFront(ply, class)
+	-- Check the player's scripted entity limit.
 	if not ply:CheckLimit("sents") then
 		return nil
 	end
@@ -80,6 +81,7 @@ local function SpawnEntityInFront(ply, class)
 	ent:Spawn()
 	ent:Activate()
 
+	-- Register the entity with the player's Sandbox SENT limit.
 	ply:AddCount("sents", ent)
 
 	if undo then
