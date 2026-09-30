@@ -127,6 +127,20 @@ PS.Items = {
 		Icon = "entities/sci_pointshop_base_beacon.png",
 		Description = "Grants positive status effects to players in proximity. Players must be manually whitelisted to be considered friendly. Can be customized. Requires 125 power in order to run.",
 	},
+	["sci_pointshop_emplacement_cannon_chassis"] = {
+		Name = "Cannon",
+		BasePrice = 250,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_emplacement_cannon_chassis.png",
+		Description = "A basic cannon that can fire some GBombs entities with moderate force. Loaded from the front. Interact with the handles to take control and aim. Alternate propellant force with mouse 2.",
+	},
+	["sci_pointshop_emplacement_howitzer_chassis"] = {
+		Name = "Howitzer",
+		BasePrice = 750,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_emplacement_howitzer_chassis.png",
+		Description = "An advanced artillery gun that can fire most GBombs entities at respectable distances. Loaded from the back. Interact with the right side handwheel to take control and aim. Alternate propellant force with mouse 2.",
+	},
 	["sci_pointshop_fuelgenerator"] = {
 		Name = "Fuel Generator",
 		BasePrice = 1000,
