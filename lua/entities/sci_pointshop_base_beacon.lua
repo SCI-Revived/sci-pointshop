@@ -38,6 +38,8 @@ if SERVER then
     util.AddNetworkString("ery_beacon_open")
     util.AddNetworkString("ery_beacon_set")
     util.AddNetworkString("ery_beacon_toggle")
+    util.AddNetworkString("ery_beacon_set_allegiance")
+    util.AddNetworkString("ery_beacon_clear_allies")
 end
 
 ENT.Attachments = {
@@ -232,6 +234,13 @@ if SERVER then
 
         self.NextPulse = CurTime() + PulseInterval
 
+        -- Per-player allegiance table, keyed by SteamID64 so it
+        -- survives reconnects. true = friendly (receives the
+        -- beacon's effect), anything else (including unset) =
+        -- hostile (ignored). Not networked -- server-authoritative
+        -- data, no client needs it.
+        self.Allegiance = {}
+
         -- The base's Use() now always opens the shared button
         -- menu instead of calling this entity's own Use()
         -- directly, so the beacon's effect/intensity/toggle panel
@@ -247,6 +256,8 @@ if SERVER then
     function ENT:OpenConfigureMenu(ply)
         if not IsValid(ply) or not ply:IsPlayer() then return end
 
+        local isFriendly = self:IsFriendly(ply)
+
         net.Start("ery_beacon_open")
             net.WriteEntity(self)
             net.WriteString(
@@ -260,7 +271,31 @@ if SERVER then
             net.WriteBool(
                 self.Active or false
             )
+            net.WriteBool(isFriendly)
         net.Send(ply)
+    end
+
+    function ENT:SetAllegiance(ply, friendly)
+        if not IsValid(ply) or not ply:IsPlayer() then return end
+
+        self.Allegiance[ply:SteamID64()] = friendly and true or nil
+
+        ply:ChatPrint(
+            "[Beacon] You are now marked as "
+            .. (friendly and "FRIENDLY" or "HOSTILE")
+            .. " to this beacon."
+        )
+    end
+
+    function ENT:IsFriendly(ply)
+        if not IsValid(ply) or not ply:IsPlayer() then return false end
+        return self.Allegiance[ply:SteamID64()] == true
+    end
+
+    -- Wipes every recorded allegiance, so nobody receives the
+    -- beacon's effect until they declare themselves friendly again.
+    function ENT:ClearAllegiance()
+        self.Allegiance = {}
     end
 
     function ENT:ToggleActive()
@@ -409,6 +444,30 @@ if SERVER then
         beacon:ToggleActive()
     end)
 
+    net.Receive("ery_beacon_set_allegiance", function(_, ply)
+
+        local beacon = net.ReadEntity()
+        local friendly = net.ReadBool()
+
+        if not IsValid(beacon) then return end
+        if beacon:GetClass() ~= "sci_pointshop_base_beacon" then return end
+        if not IsValid(ply) then return end
+
+        beacon:SetAllegiance(ply, friendly)
+    end)
+
+    net.Receive("ery_beacon_clear_allies", function(_, ply)
+
+        local beacon = net.ReadEntity()
+
+        if not IsValid(beacon) then return end
+        if beacon:GetClass() ~= "sci_pointshop_base_beacon" then return end
+        if not IsValid(ply) then return end
+
+        beacon:ClearAllegiance()
+        ply:ChatPrint("[Beacon] Allegiance list cleared -- no one is friendly now.")
+    end)
+
     function ENT:Think()
 
         local currentTime = CurTime()
@@ -445,7 +504,8 @@ if SERVER then
 
                     if IsValid(target)
                         and target:IsPlayer()
-                        and target:Alive() then
+                        and target:Alive()
+                        and self:IsFriendly(target) then
 
                         effect.apply(
                             target,
@@ -505,13 +565,16 @@ if CLIENT then
         local isActive =
             net.ReadBool()
 
+        local isFriendly =
+            net.ReadBool()
+
         local frame = vgui.Create("DFrame")
 
         frame:SetTitle(
             beacon.PrintName or "Beacon"
         )
 
-        frame:SetSize(320, 180)
+        frame:SetSize(320, 270)
         frame:Center()
         frame:MakePopup()
 
@@ -656,6 +719,63 @@ if CLIENT then
         toggleButton.DoClick = function()
 
             net.Start("ery_beacon_toggle")
+                net.WriteEntity(beacon)
+            net.SendToServer()
+
+            frame:Close()
+        end
+
+        -- Allegiance: only players marked friendly receive the
+        -- beacon's effect.
+
+        local statusLabel =
+            vgui.Create("DLabel", frame)
+
+        statusLabel:SetText(
+            "This beacon is currently "
+            .. (isFriendly
+                and "treating you as FRIENDLY."
+                or "treating you as HOSTILE (no effect).")
+        )
+
+        statusLabel:SetPos(8, 180)
+        statusLabel:SetSize(frame:GetWide() - 16, 20)
+
+        local allegianceButton =
+            vgui.Create("DButton", frame)
+
+        allegianceButton:SetPos(8, 204)
+        allegianceButton:SetSize(frame:GetWide() - 16, 26)
+
+        allegianceButton:SetText(
+            isFriendly
+            and "Declare myself HOSTILE"
+            or "Declare myself FRIENDLY"
+        )
+
+        allegianceButton.DoClick = function()
+
+            net.Start("ery_beacon_set_allegiance")
+                net.WriteEntity(beacon)
+                net.WriteBool(not isFriendly)
+            net.SendToServer()
+
+            frame:Close()
+        end
+
+        local clearAlliesButton =
+            vgui.Create("DButton", frame)
+
+        clearAlliesButton:SetPos(8, 234)
+        clearAlliesButton:SetSize(frame:GetWide() - 16, 26)
+
+        clearAlliesButton:SetText(
+            "Clear ally list (make everyone hostile)"
+        )
+
+        clearAlliesButton.DoClick = function()
+
+            net.Start("ery_beacon_clear_allies")
                 net.WriteEntity(beacon)
             net.SendToServer()
 
