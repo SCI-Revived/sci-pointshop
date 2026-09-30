@@ -125,7 +125,7 @@ PS.Items = {
 		BasePrice = 3500,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_beacon.png",
-		Description = "Grants positive status effects to players in proximity. Can be customized. Requires 125 power in order to run.",
+		Description = "Grants positive status effects to players in proximity. Players must be manually whitelisted to be considered friendly. Can be customized. Requires 125 power in order to run.",
 	},
 	["sci_pointshop_fuelgenerator"] = {
 		Name = "Fuel Generator",
