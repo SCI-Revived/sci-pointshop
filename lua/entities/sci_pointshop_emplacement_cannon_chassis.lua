@@ -70,6 +70,47 @@ if SERVER then
 
         self:SpawnBarrel()
         constraint.Keepupright(self, Angle(0, 0, 0), 0, 500)
+
+        -- Whatever spawned us usually assigns the owner AFTER Initialize runs,
+        -- so re-sync shortly afterwards as well
+        timer.Simple(0.5, function()
+            if IsValid(self) then self:SyncBarrelOwner() end
+        end)
+    end
+
+    -- Resolves the chassis owner from whichever mechanism is in use
+    -- (CPPI / prop protection, creator, owner, or an "Owner" NW entity).
+    -- Add or reorder checks here to match how your pointshop base stores it.
+    function ENT:GetCannonOwner()
+        if isfunction(self.CPPIGetOwner) then
+            local o = self:CPPIGetOwner()
+            if IsValid(o) then return o end
+        end
+
+        local o = self:GetCreator()
+        if IsValid(o) then return o end
+
+        o = self:GetOwner()
+        if IsValid(o) then return o end
+
+        o = rawget(self:GetTable(), "Owner")
+        if IsValid(o) then return o end
+
+        o = self:GetNWEntity("Owner")
+        if IsValid(o) then return o end
+
+        return nil
+    end
+
+    -- Pushes the chassis owner down to the barrel
+    function ENT:SyncBarrelOwner()
+        local barrel = self.CannonBarrel
+        if not IsValid(barrel) then return end
+
+        local owner = self:GetCannonOwner()
+        if IsValid(owner) then
+            barrel:SetCannonOwner(owner)
+        end
     end
 
     function ENT:Use(ply)
@@ -103,6 +144,8 @@ if SERVER then
 
         barrel.Chassis = self
         self.CannonBarrel = barrel
+
+        self:SyncBarrelOwner()
     end
 
     ---------------------------------------------------------------------

@@ -169,12 +169,19 @@ PS.Items = {
 		Icon = "entities/sci_pointshop_power_rtg.png",
 		Description = "Provides 125 power for your machines while active. Can be placed anywhere.",
 	},
+	["sci_pointshop_base_ewr_sentinel"] = {
+		Name = "Sentinel",
+		BasePrice = 1750,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
+		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
+	},
 	["sci_pointshop_base_ewr_interceptor"] = {
 		Name = "Interceptor",
 		BasePrice = 2000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_ewr_interceptor.png",
-		Description = "Motion based SAM platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
+		Description = "Motion based SAM platform that intercepts players and incoming GBombs munitions. Can retain up to 4 targets at once. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
 	},
 	["sci_pointshop_base_ewr_screen"] = {
 		Name = "EWR Screen",
@@ -210,6 +217,13 @@ PS.Items = {
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_turret.png",
 		Description = "Automatically targets hostile players while active. Players must be manually whitelisted to be considered friendly. Requires 100 power in order to run.",
+	},
+	["sci_pointshop_base_nukedevice"] = {
+		Name = "DIY Nuclear Bomb Kit",
+		BasePrice = 95000,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_nukedevice.png",
+		Description = "Assembles a random nuclear device over the course of 30 minutes. Requires 500 power in order to run.",
 	},
 	---------------- Weapons ----------------
 	["m9k_minigun"] = {

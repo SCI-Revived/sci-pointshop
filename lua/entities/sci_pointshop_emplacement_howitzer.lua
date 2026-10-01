@@ -190,6 +190,72 @@ if SERVER then
         self:SetNWString("LoadedAmmoClass", "")
     end
 
+    ---------------------------------------------------------------------
+    -- Ownership
+    -- The barrel takes its owner from the chassis that spawned it; fired
+    -- bombs inherit it.
+    ---------------------------------------------------------------------
+
+    -- Resolves an entity's owner from whichever mechanism is in use
+    -- (CPPI / prop protection, creator, owner, or an "Owner" NW entity).
+    -- Add or reorder checks here to match how your pointshop base stores it.
+    local function ResolveEntOwner(ent)
+        if not IsValid(ent) then return nil end
+
+        if isfunction(ent.CPPIGetOwner) then
+            local o = ent:CPPIGetOwner()
+            if IsValid(o) then return o end
+        end
+
+        local o = ent:GetCreator()
+        if IsValid(o) then return o end
+
+        o = ent:GetOwner()
+        if IsValid(o) then return o end
+
+        o = rawget(ent:GetTable(), "Owner")
+        if IsValid(o) then return o end
+
+        o = ent:GetNWEntity("Owner")
+        if IsValid(o) then return o end
+
+        return nil
+    end
+
+    function ENT:SetCannonOwner(owner)
+        if not IsValid(owner) then return end
+        self.CannonOwner = owner
+
+        if isfunction(self.CPPISetOwner) then
+            self:CPPISetOwner(owner)
+        end
+    end
+
+    function ENT:GetCannonOwner()
+        -- The chassis owner may be assigned after we spawn, so keep asking
+        -- the chassis until we have one
+        if not IsValid(self.CannonOwner) then
+            self:SetCannonOwner(ResolveEntOwner(self.Chassis))
+        end
+
+        return IsValid(self.CannonOwner) and self.CannonOwner or nil
+    end
+
+    -- Marks an entity (the fired bomb) as owned by the given player
+    local function MarkOwned(ent, owner)
+        ent:SetOwner(owner)
+        ent:SetCreator(owner)
+
+        -- GBombs5 passes GBOWNER as the Attacker of every shockwave it spawns.
+        -- gb5's own spawn function normally sets it; ents.Create doesn't, and
+        -- a nil Attacker makes gb5_shockwave_ent_instant error on SetAttacker.
+        ent.GBOWNER = owner
+
+        if isfunction(ent.CPPISetOwner) then
+            ent:CPPISetOwner(owner)
+        end
+    end
+
     -- The UI base's Use() opens the button menu, which this entity never
     -- builds (it skips the base Initialize). Go straight to OnUse instead.
     function ENT:Use(activator)
@@ -359,7 +425,17 @@ if SERVER then
 
         shell:SetPos(muzzlePos)
         shell:SetAngles(self:GetAngles())
-        shell:SetOwner(self.ControlledBy or self)
+        -- Bomb is owned by the barrel owner, which is the chassis owner.
+        -- Falls back to the operator, then the barrel, if no owner resolves.
+        local owner = self:GetCannonOwner()
+        if IsValid(owner) then
+            MarkOwned(shell, owner)
+        else
+            -- GBOWNER must never be nil (shockwaves call SetAttacker on it)
+            local fallback = IsValid(self.ControlledBy) and self.ControlledBy or self
+            shell:SetOwner(fallback)
+            shell.GBOWNER = fallback
+        end
         shell:Spawn()
         shell:Activate()
 

@@ -173,6 +173,45 @@ if SERVER then
         self:SetNWString("LoadedAmmoClass", "")
     end
 
+    ---------------------------------------------------------------------
+    -- Ownership
+    -- The chassis hands us its owner (SetCannonOwner); fired bombs inherit it.
+    ---------------------------------------------------------------------
+    function ENT:SetCannonOwner(owner)
+        if not IsValid(owner) then return end
+        self.CannonOwner = owner
+
+        if isfunction(self.CPPISetOwner) then
+            self:CPPISetOwner(owner)
+        end
+    end
+
+    function ENT:GetCannonOwner()
+        -- Chassis owner may have been assigned after we were spawned, so
+        -- ask the chassis again if we don't have one yet
+        if not IsValid(self.CannonOwner) and IsValid(self.Chassis)
+            and isfunction(self.Chassis.GetCannonOwner) then
+            self:SetCannonOwner(self.Chassis:GetCannonOwner())
+        end
+
+        return IsValid(self.CannonOwner) and self.CannonOwner or nil
+    end
+
+    -- Marks an entity (the fired bomb) as owned by the given player
+    local function MarkOwned(ent, owner)
+        ent:SetOwner(owner)
+        ent:SetCreator(owner)
+
+        -- GBombs5 passes GBOWNER as the Attacker of every shockwave it spawns.
+        -- gb5's own spawn function normally sets it; ents.Create doesn't, and
+        -- a nil Attacker makes gb5_shockwave_ent_instant error on SetAttacker.
+        ent.GBOWNER = owner
+
+        if isfunction(ent.CPPISetOwner) then
+            ent:CPPISetOwner(owner)
+        end
+    end
+
     -- The UI base's Use() opens the button menu, which this entity never
     -- builds (it skips the base Initialize). Go straight to OnUse instead.
     function ENT:Use(activator)
@@ -340,7 +379,17 @@ if SERVER then
 
         shell:SetPos(muzzlePos)
         shell:SetAngles(self:GetAngles())
-        shell:SetOwner(self.ControlledBy or self)
+        -- Bomb is owned by the barrel owner, which is the chassis owner.
+        -- Falls back to the old behaviour if no owner could be resolved.
+        local owner = self:GetCannonOwner()
+        if IsValid(owner) then
+            MarkOwned(shell, owner)
+        else
+            -- GBOWNER must never be nil (shockwaves call SetAttacker on it)
+            local fallback = IsValid(self.ControlledBy) and self.ControlledBy or self
+            shell:SetOwner(fallback)
+            shell.GBOWNER = fallback
+        end
         shell:Spawn()
         shell:Activate()
 

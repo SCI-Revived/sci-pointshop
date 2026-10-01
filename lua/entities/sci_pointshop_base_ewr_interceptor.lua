@@ -6,7 +6,7 @@ ENT.Base = "sci_pointshop_entity_base_ui"
 ENT.PrintName = "Interceptor"
 ENT.Author = "Paloma"
 ENT.Spawnable = true
-ENT.AdminOnly = false
+ENT.AdminOnly = true
 ENT.Category = "Pointshop Entities"
 
 ENT.IconPath = "entities/sci_pointshop_base_ewr_interceptor.png"
