@@ -169,13 +169,6 @@ PS.Items = {
 		Icon = "entities/sci_pointshop_power_rtg.png",
 		Description = "Provides 125 power for your machines while active. Can be placed anywhere.",
 	},
-	["sci_pointshop_base_ewr_sentinel"] = {
-		Name = "Sentinel",
-		BasePrice = 1750,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
-		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
-	},
 	["sci_pointshop_base_ewr_interceptor"] = {
 		Name = "Interceptor",
 		BasePrice = 2000,
