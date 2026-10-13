@@ -6,7 +6,7 @@ local TIMER_NAME = "PS_GlobalPlayReward"
 
 function PS.PlayReward.PayAllPlayers()
 	for _, ply in ipairs(player.GetAll()) do
-		if IsValid(ply) then
+		if IsValid(ply) and not ply.buildmode then
 			PS.Core.AddPoints(ply, PS.Config.PlayReward, "playtime")
 
 			if ply.ChatPrint then
