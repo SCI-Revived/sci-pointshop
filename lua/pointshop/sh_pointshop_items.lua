@@ -10,6 +10,7 @@ Config file for the shop.
 				BasePrice = 1000,                 -- cost in points
 				Type      = "entity"/"weapon"/"bonus",
 				BonusType = "Survivability"/"Offensive"/"Special", -- only used when Type = "bonus"; defaults to "Survivability" if omitted
+				EntityCategory = "Base"/"Bombs",  -- only used when Type = "entity"; defaults to "Base" if omitted
 				Icon      = "icon16/something.png", -- optional, shown on the shop button
 				Description = "text here",       -- optional, shown as a tooltip
 			},
@@ -23,6 +24,8 @@ Config file for the shop.
 
 	BonusType (bonus items only) determines which of the 3 side-by-side categories a passive appears under on the Bonuses tab.
 	A player may only have one active passive per BonusType at a time.
+
+	EntityCategory (entity items only) determines which of the 2 side-by-side columns an entity appears under on the Entities tab.
 ]]
 
 PS = PS or {}
@@ -73,53 +76,37 @@ function PS.GetItemBonusType(item)
 	return PS.BONUS_TYPE_DEFAULT
 end
 
+PS.ENTITY_CATEGORY_BASE = "Base"
+PS.ENTITY_CATEGORY_BOMB = "Bombs"
+
+PS.ENTITY_CATEGORY_DEFAULT = PS.ENTITY_CATEGORY_BASE
+
+PS.ENTITY_CATEGORY_ORDER = {
+	PS.ENTITY_CATEGORY_BASE,
+	PS.ENTITY_CATEGORY_BOMB,
+}
+
+local VALID_ENTITY_CATEGORIES = {
+	[PS.ENTITY_CATEGORY_BASE] = true,
+	[PS.ENTITY_CATEGORY_BOMB] = true,
+}
+
+function PS.IsValidEntityCategory(t)
+	return VALID_ENTITY_CATEGORIES[t] == true
+end
+
+function PS.GetItemEntityCategory(item)
+	if item and PS.IsValidEntityCategory(item.EntityCategory) then
+		return item.EntityCategory
+	end
+	return PS.ENTITY_CATEGORY_DEFAULT
+end
+
 ------------------------------------------------- Item Catalog -------------------------------------------------
 
 PS.Items = {
 
 	---------------- Entities ----------------
-	["gb5_heavy_b_t12"] = {
-		Name = "T12 Cloudmaker",
-		BasePrice = 15000,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "icon16/bomb.png",
-		Description = "Huge earthquake bomb with massive damage but a moderate blast radius. Meant for cracking the strongest of bases.",
-	},
-	["gb5_chemical_napalm"] = {
-		Name = "Napalm Bomb",
-		BasePrice = 1750,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "icon16/bomb.png",
-		Description = "Napalm bomb that ignites a large area. Will burn players to a crisp.",
-	},
-	["gb5_heavy_b_1000lb"] = {
-		Name = "XMI HEB 1000lb",
-		BasePrice = 10000,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "icon16/bomb.png",
-		Description = "Large bomb with high damage but a moderate blast radius. Will deal significant damage to bases.",
-	},
-	["gb5_heavy_b_thermobaric"] = {
-		Name = "GXM-11 Thermobaric",
-		BasePrice = 3500,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "icon16/bomb.png",
-		Description = "Thermobaric bomb with a large blast radius. Will deal average damage to bases but high anti-personnel damage.",
-	},
-	["gb5_proj_howitzer_shell_in"] = {
-		Name = "Howitzer Shell (Incendiary)",
-		BasePrice = 350,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "icon16/bomb.png",
-		Description = "Incendiary artillery shell, sets players on fire.",
-	},
-	["gb5_proj_howitzer_shell_cl"] = {
-		Name = "Chlorine Shell",
-		BasePrice = 500,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "icon16/bomb.png",
-		Description = "Chlorine gas artillery shell, leaves a cloud of gas that blinds and damages players inside. Ignores armor.",
-	},
 	["sci_pointshop_base_beacon"] = {
 		Name = "Beacon",
 		BasePrice = 3500,
@@ -215,8 +202,65 @@ PS.Items = {
 		Name = "DIY Nuclear Bomb Kit",
 		BasePrice = 95000,
 		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/sci_pointshop_base_nukedevice.png",
 		Description = "Assembles a random nuclear device over the course of 30 minutes. Requires 500 power in order to run.",
+	},
+	["gb5_heavy_b_t12"] = {
+		Name = "T12 Cloudmaker",
+		BasePrice = 12000,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_heavy_b_t12.png",
+		Description = "Huge earthquake bomb with massive damage but a moderate blast radius. Meant for cracking the strongest of bases.",
+	},
+	["gb5_chemical_napalm"] = {
+		Name = "Napalm Bomb",
+		BasePrice = 1750,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_chemical_napalm.png",
+		Description = "Napalm bomb that ignites a large area. Will burn players to a crisp.",
+	},
+	["gb5_heavy_b_1000lb"] = {
+		Name = "XMI HEB 1000lb",
+		BasePrice = 8000,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_heavy_b_1000lb.png",
+		Description = "Large bomb with high damage but a moderate blast radius. Will deal significant damage to bases.",
+	},
+	["gb5_heavy_b_thermobaric"] = {
+		Name = "GXM-11 Thermobaric",
+		BasePrice = 3500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_heavy_b_thermobaric.png",
+		Description = "Thermobaric bomb with a large blast radius. Will deal average damage to bases but high anti-personnel damage.",
+	},
+	["gb5_proj_howitzer_shell_in"] = {
+		Name = "Howitzer Shell (Incendiary)",
+		BasePrice = 350,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_proj_howitzer_shell_in.png",
+		Description = "Incendiary artillery shell, sets players on fire.",
+	},
+	["gb5_proj_howitzer_shell_cl"] = {
+		Name = "Chlorine Shell",
+		BasePrice = 500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_proj_howitzer_shell_cl.png",
+		Description = "Chlorine gas artillery shell, leaves a cloud of gas that blinds and damages players inside. Ignores armor.",
+	},
+	["gb5_nuclear_davycrockett"] = {
+		Name = "Davy Crockett",
+		BasePrice = 20000,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_nuclear_davycrockett.png",
+		Description = "Miniature nuclear artillery shell with a devastating blast.",
 	},
 	---------------- Weapons ----------------
 	["m9k_minigun"] = {
@@ -505,3 +549,29 @@ function PS.GetBonusItemsByCategory()
 
 	return grouped
 end
+
+function PS.GetEntityItemsByCategory()
+	local grouped = {}
+	for _, category in ipairs(PS.ENTITY_CATEGORY_ORDER) do
+		grouped[category] = {}
+	end
+
+	for class, data in pairs(PS.Items) do
+		if data.Type == PS.ITEM_TYPE_ENTITY then
+			local category = PS.GetItemEntityCategory(data)
+			table.insert(grouped[category], { class = class, data = data })
+		end
+	end
+
+	return grouped
+end
+
+--[[
+	["sci_pointshop_base_ewr_sentinel"] = {
+		Name = "Sentinel",
+		BasePrice = 1750,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
+		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
+	},
+]]--
