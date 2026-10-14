@@ -5,7 +5,7 @@ ENT.Base = "sci_pointshop_entity_base_ui"
 
 ENT.PrintName = "Auto-Repair Station"
 ENT.Category = "Pointshop Entities"
-ENT.Spawnable = true
+ENT.Spawnable = false
 ENT.AdminOnly = true
 
 ENT.IconPath = "entities/sci_pointshop_base_repair.png"

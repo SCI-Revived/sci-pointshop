@@ -5,7 +5,7 @@ ENT.Base = "sci_pointshop_entity_base_ui"
 
 ENT.PrintName = "Beacon"
 ENT.Author = "Paloma"
-ENT.Spawnable = true
+ENT.Spawnable = false
 ENT.AdminOnly = true
 ENT.Category = "Pointshop Entities"
 

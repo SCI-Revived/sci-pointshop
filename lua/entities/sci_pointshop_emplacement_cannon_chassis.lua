@@ -4,7 +4,7 @@ ENT.Base = "sci_pointshop_entity_base_ui"
 ENT.Type = "anim"
 ENT.PrintName = "Cannon Chassis"
 ENT.Category = "Pointshop Entities"
-ENT.Spawnable = true
+ENT.Spawnable = false
 ENT.AdminOnly = true
 
 ENT.BaseModel = "models/hunter/blocks/cube075x075x075.mdl"

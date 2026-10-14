@@ -5,7 +5,7 @@ ENT.Base = "sci_pointshop_entity_base_ui"
 
 ENT.PrintName = "Sentinel"
 ENT.Author = "Paloma"
-ENT.Spawnable = true
+ENT.Spawnable = false
 ENT.AdminOnly = true
 ENT.Category = "Pointshop Entities"
 
@@ -14,7 +14,7 @@ ENT.IconOffset = Vector(120, 0, -15)
 
 -- Placeholder model: swap freely.
 ENT.BaseModel = "models/hunter/blocks/cube4x4x4.mdl"
-ENT.BaseMaterial = "models/effects/intro_tearshape"
+ENT.BaseMaterial = "" --models/effects/intro_tearshape
 ENT.BaseColor = Color(80, 90, 100, 255)
 ENT.BoneScale = Vector(1, 1, 1)
 
@@ -64,13 +64,19 @@ ENT.TARGET_PRIORITY_PREFIXED = 2
 -- Gun
 ENT.MuzzleOffset = Vector(0, 0, 40)  -- local to the entity
 ENT.FireSound = "apc_fire"
-ENT.FireDelay = 0.1                  -- seconds between shots
-ENT.MagazineSize = 75
-ENT.ReloadDuration = 4               -- seconds
-ENT.Spread = 0.35                     -- degrees, random cone half-angle
+ENT.FireDelay = 0.035               -- seconds between shots (60 / 3400 RPM)
+ENT.BurstSize = 20                   -- rounds per burst
+ENT.BurstDelay = 2                   -- seconds from the end of one burst to the start of the next
+ENT.MagazineSize = 60                -- 3 bursts per magazine
+ENT.ReloadDuration = 6               -- seconds
+ENT.Spread = 0.35                    -- degrees, random cone half-angle
+ENT.MaxShotsPerThink = 4             -- catch-up cap if the server tickrate is below the fire rate
 
 -- Projectile (passed to simfphys.FirePhysProjectile)
-ENT.ProjectileSpeed = 11000          -- units/second; used for lead calculation
+-- simfphys_projectile moves `MuzzleVelocity` units per *nominal* tick
+-- (66.666/s) and defaults to 200, i.e. ~13333 u/s. This must match what
+-- the projectile really does, or every lead calculation is off.
+ENT.ProjectileSpeed = 11500          -- units/second; used for lead calculation
 ENT.ProjectileDamage = 50
 ENT.ProjectileForce = 1
 ENT.ProjectileSize = 7
@@ -79,9 +85,22 @@ ENT.ProjectileBlastDamage = 50
 ENT.ProjectileDeflectAng = 0
 ENT.ProjectileBlastEffect = "simfphys_tankweapon_explosion_micro"
 
--- Also compensate for gravity when leading non-player targets
--- (bombs and other falling physics entities).
+-- The projectile's own drop, mirroring simfphys_projectile:Think():
+-- gravity ramps from 0 up to 666.7 u/s^2 over 0.5 s, then stays constant.
+ENT.ProjectileGravity = 666.7
+ENT.ProjectileGravityRamp = 0.5
+
+-- Lead calculation
+-- Known gravity is applied to falling physics entities (bombs etc.)
+-- and to airborne players.
 ENT.GravityCompensation = true
+-- Estimate target acceleration from velocity history (helps vs. turning
+-- aircraft/vehicles). On-foot players on the ground use constant velocity.
+ENT.UseTargetAcceleration = true
+ENT.AccelSmoothTime = 0.35           -- seconds, smoothing of the estimate
+ENT.MaxTargetAccel = 1500            -- units/s^2 clamp
+ENT.TrackSampleInterval = 0.05       -- seconds between velocity samples
+ENT.MaxLeadTime = 3                  -- seconds, safety clamp on flight time
 
 ENT.Active = true
 
@@ -114,6 +133,8 @@ if SERVER then
 
 		self.NextScanTime = 0
 		self.NextFireTime = 0
+		self.NextBurstTime = 0
+		self.BurstShotsFired = 0
 		self.ReloadEndTime = 0
 
 		self.CurrentTarget = NULL
@@ -145,8 +166,19 @@ if SERVER then
 		end
 	end
 
+	-- Ends the current burst (whether it was completed or cut short by
+	-- losing the target) and starts the delay before the next one.
+	function ENT:EndBurst()
+		self.BurstShotsFired = 0
+		self.NextBurstTime = CurTime() + (self.BurstDelay or 2)
+	end
+
 	function ENT:ClearTarget()
 		self:SetTarget(NULL)
+
+		if (self.BurstShotsFired or 0) > 0 then
+			self:EndBurst()
+		end
 
 		if self.State == "firing" then
 			self:SetState("idle")
@@ -315,7 +347,17 @@ if SERVER then
 		end
 
 		local veh = ent:GetVehicle()
-		if IsValid(veh) then return veh end
+		if IsValid(veh) then
+			-- Seats are usually parented to the actual vehicle; use the
+			-- root so position/centre/velocity are those of the vehicle.
+			local parent = veh:GetParent()
+			while IsValid(parent) do
+				veh = parent
+				parent = veh:GetParent()
+			end
+
+			return veh
+		end
 
 		return NULL
 	end
@@ -330,6 +372,85 @@ if SERVER then
 		local veh = self:GetTrackedVehicle(ent)
 		if IsValid(veh) then return veh:GetVelocity() end
 		return ent:GetVelocity()
+	end
+
+	-- Point to aim at: the centre of the target (a player's GetPos() is
+	-- at their feet, a vehicle's origin is not necessarily its middle).
+	function ENT:GetTrackCenter(ent)
+		local veh = self:GetTrackedVehicle(ent)
+		if IsValid(veh) then return veh:WorldSpaceCenter() end
+		return ent:WorldSpaceCenter()
+	end
+
+	-- Acceleration we know about without measuring: gravity on falling
+	-- physics entities and on airborne on-foot players.
+	function ENT:GetKnownAcceleration(target)
+		if target:IsPlayer() then
+			if IsValid(self:GetTrackedVehicle(target)) then return vector_origin end
+
+			if target:GetMoveType() == MOVETYPE_WALK
+				and not target:IsOnGround()
+				and target:WaterLevel() < 2 then
+				return physenv.GetGravity()
+			end
+
+			return vector_origin
+		end
+
+		if self.GravityCompensation then
+			local phys = target:GetPhysicsObject()
+			if IsValid(phys) and phys:IsGravityEnabled() then
+				return physenv.GetGravity()
+			end
+		end
+
+		return vector_origin
+	end
+
+	-- Samples the target's velocity and keeps a smoothed estimate of its
+	-- unexplained acceleration (turning, thrust, drag...). Called every
+	-- Think while a target is held, so the estimate is already warm when
+	-- a burst starts.
+	function ENT:UpdateTracking(target, now)
+		local vel = self:GetTrackVelocity(target)
+		local tr = self.Track
+
+		if not tr or tr.ent ~= target or (now - tr.time) > 0.5 then
+			self.Track = { ent = target, vel = vel, time = now, accel = Vector(0, 0, 0) }
+			return
+		end
+
+		local dt = now - tr.time
+		if dt < (self.TrackSampleInterval or 0.05) then return end
+
+		local raw = (vel - tr.vel) / dt - self:GetKnownAcceleration(target)
+		local alpha = 1 - math.exp(-dt / (self.AccelSmoothTime or 0.35))
+		local accel = tr.accel + (raw - tr.accel) * alpha
+
+		local maxAccel = self.MaxTargetAccel or 1500
+		if accel:LengthSqr() > maxAccel * maxAccel then
+			accel = accel:GetNormalized() * maxAccel
+		end
+
+		tr.accel = accel
+		tr.vel = vel
+		tr.time = now
+	end
+
+	function ENT:GetTrackAcceleration(target)
+		local known = self:GetKnownAcceleration(target)
+
+		if not self.UseTargetAcceleration then return known end
+
+		-- On-foot players change velocity too abruptly to extrapolate.
+		if target:IsPlayer() and not IsValid(self:GetTrackedVehicle(target)) then
+			return known
+		end
+
+		local tr = self.Track
+		if not tr or tr.ent ~= target then return known end
+
+		return known + tr.accel
 	end
 
 	-- Whether ent is the *kind* of thing the sentinel will shoot at,
@@ -364,6 +485,14 @@ if SERVER then
 
 		-- Vehicles are never targeted directly; their occupants are.
 		if ent:IsVehicle() then return false end
+
+		-- Dead / spectating players are never targets. A player killed
+		-- by the sentinel keeps the velocity from the blast, so without
+		-- this they still pass the speed check as a "moving target".
+		if ent:IsPlayer() then
+			if not ent:Alive() or ent:Health() <= 0 then return false end
+			if ent:GetObserverMode() ~= OBS_MODE_NONE then return false end
+		end
 
 		if not self:IsTargetableClass(ent) then return false end
 
@@ -442,8 +571,12 @@ if SERVER then
 	---------------------------------------------------------
 
 	function ENT:ReloadMagazine()
-		self.AmmoLeft = self.MagazineSize or 40
+		self.AmmoLeft = self.MagazineSize or 60
 		self:SetNWInt("AmmoLeft", self.AmmoLeft)
+
+		-- A fresh magazine starts a fresh burst, ready immediately.
+		self.BurstShotsFired = 0
+		self.NextBurstTime = 0
 	end
 
 	function ENT:StartReload()
@@ -456,60 +589,57 @@ if SERVER then
 		return self:LocalToWorld(self.MuzzleOffset or Vector(0, 0, 40))
 	end
 
+	-- How far (units) the projectile has fallen below its straight-line
+	-- path after t seconds of flight. Mirrors the projectile's gravity:
+	-- acceleration ramps linearly 0 -> g over `ramp` seconds, then holds.
+	function ENT:GetProjectileDrop(t)
+		-- The projectile moves *before* applying gravity each tick, so
+		-- its drop lags the continuous curve by about one tick.
+		t = t - engine.TickInterval()
+		if t <= 0 then return 0 end
+
+		local g = self.ProjectileGravity or 666.7
+		local ramp = self.ProjectileGravityRamp or 0.5
+
+		if t <= ramp then
+			return g * t * t * t / (6 * ramp)
+		end
+
+		local s = t - ramp
+		return g * ramp * ramp / 6 + g * ramp * 0.5 * s + 0.5 * g * s * s
+	end
+
 	-- Where to point the gun so a projectile launched from muzzlePos
-	-- at ProjectileSpeed meets the target, assuming it keeps its
-	-- current velocity. Solves |D + V*t| = s*t for the smallest
-	-- positive t. Falls back to aiming straight at the target when
-	-- there is no solution (e.g. it is faster than the projectile and
-	-- running away).
+	-- meets the target. The projectile flies a straight line at
+	-- ProjectileSpeed and additionally drops by GetProjectileDrop(t), so
+	-- we need a flight time t satisfying
+	--     |P(t) - muzzle + (0,0,drop(t))| = speed * t
+	-- where P(t) is the target's predicted position (velocity plus
+	-- estimated acceleration). Solved by fixed-point iteration, which
+	-- converges quickly while the target is slower than the projectile.
 	function ENT:GetAimPoint(target, muzzlePos)
-		local speed = (self.ProjectileSpeed or 10000) + math.random(-1000, 1000)
+		local speed = self.ProjectileSpeed or 13333
 
-		local pos = self:GetTrackPos(target)
+		local pos = self:GetTrackCenter(target)
 		local vel = self:GetTrackVelocity(target)
-		local d = pos - muzzlePos
+		local accel = self:GetTrackAcceleration(target)
+		local maxT = self.MaxLeadTime or 3
 
-		local a = vel:Dot(vel) - speed * speed
-		local b = 2 * d:Dot(vel)
-		local c = d:Dot(d)
+		local t = pos:Distance(muzzlePos) / speed
 
-		local t
+		for _ = 1, 8 do
+			local aimPos = pos + vel * t + accel * (0.5 * t * t)
+			aimPos.z = aimPos.z + self:GetProjectileDrop(t)
 
-		if math.abs(a) < 1e-6 then
-			if math.abs(b) > 1e-6 then
-				t = -c / b
-			end
-		else
-			local disc = b * b - 4 * a * c
+			local newT = math.min(aimPos:Distance(muzzlePos) / speed, maxT)
+			local converged = math.abs(newT - t) < 0.0002
+			t = newT
 
-			if disc >= 0 then
-				local root = math.sqrt(disc)
-				local t1 = (-b - root) / (2 * a)
-				local t2 = (-b + root) / (2 * a)
-
-				if t1 > 0 and t2 > 0 then
-					t = math.min(t1, t2)
-				elseif t1 > 0 then
-					t = t1
-				elseif t2 > 0 then
-					t = t2
-				end
-			end
+			if converged then break end
 		end
 
-		if not t or t <= 0 then
-			t = d:Length() / speed
-		end
-
-		local aimPos = pos + vel * t
-
-		-- Falling things (bombs etc.) are still accelerating down.
-		if self.GravityCompensation and not target:IsPlayer() then
-			local phys = target:GetPhysicsObject()
-			if IsValid(phys) and phys:IsGravityEnabled() then
-				aimPos = aimPos + physenv.GetGravity() * 0.5 * t * t
-			end
-		end
+		local aimPos = pos + vel * t + accel * (0.5 * t * t)
+		aimPos.z = aimPos.z + self:GetProjectileDrop(t)
 
 		return aimPos
 	end
@@ -550,9 +680,55 @@ if SERVER then
 			BlastDamage = self.ProjectileBlastDamage or 50,
 			DeflectAng = self.ProjectileDeflectAng or 40,
 			BlastEffect = self.ProjectileBlastEffect or "simfphys_tankweapon_explosion_micro",
+			-- units per nominal tick; ignored by versions that don't read it
+			-- (the projectile then uses its default of 200 = 13333 u/s).
+			MuzzleVelocity = (self.ProjectileSpeed or 13333) / 66.666,
 		})
 
 		return true
+	end
+
+	-- Fires as many rounds of the current burst as are due this tick,
+	-- then ends the burst / starts a reload when appropriate.
+	function ENT:FireBurstStep(target, now)
+		local delay = self.FireDelay or 0.0176
+		local burstSize = self.BurstSize or 20
+
+		-- The first round of a burst goes out immediately.
+		if (self.BurstShotsFired or 0) == 0 then
+			self.NextFireTime = now
+		end
+
+		local fired = 0
+
+		while fired < (self.MaxShotsPerThink or 4) and now >= self.NextFireTime do
+			if not self:FireAt(target) then
+				self.NextFireTime = now + delay
+				break
+			end
+
+			-- Accumulate so the average rate matches FireDelay despite
+			-- tick quantisation.
+			self.NextFireTime = self.NextFireTime + delay
+
+			fired = fired + 1
+			self.BurstShotsFired = self.BurstShotsFired + 1
+			self.AmmoLeft = (self.AmmoLeft or 0) - 1
+
+			if self.AmmoLeft <= 0 or self.BurstShotsFired >= burstSize then
+				break
+			end
+		end
+
+		if fired > 0 then
+			self:SetNWInt("AmmoLeft", self.AmmoLeft)
+		end
+
+		if self.AmmoLeft <= 0 then
+			self:StartReload() -- also ends the burst via ClearTarget
+		elseif self.BurstShotsFired >= burstSize then
+			self:EndBurst()
+		end
 	end
 
 	---------------------------------------------------------
@@ -592,22 +768,15 @@ if SERVER then
 					engaged = true
 					self:SetState("firing")
 
-					if currentTime >= (self.NextFireTime or 0) then
-						-- Accumulate so the average rate matches
-						-- FireDelay despite tick quantisation.
-						local delay = self.FireDelay or 0.1
-						local nextFire = (self.NextFireTime or 0) + delay
-						if nextFire < currentTime then nextFire = currentTime + delay end
-						self.NextFireTime = nextFire
+					-- Keep tracking even between bursts so the
+					-- acceleration estimate is ready when firing resumes.
+					self:UpdateTracking(target, currentTime)
 
-						if self:FireAt(target) then
-							self.AmmoLeft = (self.AmmoLeft or 0) - 1
-							self:SetNWInt("AmmoLeft", self.AmmoLeft)
+					if currentTime >= (self.NextBurstTime or 0) then
+						self:FireBurstStep(target, currentTime)
 
-							if self.AmmoLeft <= 0 then
-								self:StartReload()
-								engaged = false
-							end
+						if self.State == "reloading" then
+							engaged = false
 						end
 					end
 				elseif self.State == "firing" then
