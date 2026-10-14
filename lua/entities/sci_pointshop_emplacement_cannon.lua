@@ -509,8 +509,8 @@ if SERVER then
         for _, ent in ipairs(ents.FindInSphere(self:GetPos(), 250)) do
             if ent:IsPlayer() and ent:Alive() then
                 ent:ViewPunch(Angle(math.random(-5, 5), math.random(-5, 5), 0))
-                ent:ApplyEffect("Concussion", 1)
-                ent:ApplyEffect("Slowed", 1, 75)
+                --ent:ApplyEffect("Concussion", 1)
+                --ent:ApplyEffect("Slowed", 1, 75)
             end
         end
 
