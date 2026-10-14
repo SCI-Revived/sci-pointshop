@@ -320,7 +320,7 @@ local function BuildCardList(parent, items, empty_message)
 	return scroll, RefreshCards
 end
 
--- Entities / Weapons tabs
+-- Weapons tab
 
 local function BuildCategoryPanel(item_type, empty_message)
 	local base = vgui.Create("DPanel")
@@ -335,18 +335,18 @@ local function BuildCategoryPanel(item_type, empty_message)
 	return base
 end
 
--- Bonuses tab
+-- Multi-column tabs (Entities and Bonuses)
 
-local function BuildBonusesPanel()
+-- Builds a panel with one side-by-side column per category, each with its own header and scrollable card list.
+local function BuildColumnsPanel(category_order, grouped, empty_message)
 	local base = vgui.Create("DPanel")
 	base:Dock(FILL)
 	base.Paint = function() end
 
-	local grouped = PS.GetBonusItemsByCategory()
-	local column_count = #PS.BONUS_TYPE_ORDER
+	local column_count = #category_order
 	local refresh_fns = {}
 
-	for i, bonus_type in ipairs(PS.BONUS_TYPE_ORDER) do
+	for i, category in ipairs(category_order) do
 		local column = vgui.Create("DPanel", base)
 		column:Dock(LEFT)
 		column:DockMargin(i == 1 and 0 or 4, 0, 0, 0)
@@ -356,7 +356,7 @@ local function BuildBonusesPanel()
 		end
 
 		local header = vgui.Create("DLabel", column)
-		header:SetText(bonus_type)
+		header:SetText(category)
 		header:SetFont("PS_Shop_ColumnHeader")
 		header:SetTextColor(COLOR_COLUMN_HEADER)
 		header:Dock(TOP)
@@ -364,7 +364,7 @@ local function BuildBonusesPanel()
 		header:SetContentAlignment(4)
 		header:SizeToContents()
 
-		local _, RefreshCards = BuildCardList(column, grouped[bonus_type], "No bonuses in this category.")
+		local _, RefreshCards = BuildCardList(column, grouped[category], empty_message)
 		table.insert(refresh_fns, RefreshCards)
 	end
 
@@ -385,6 +385,16 @@ local function BuildBonusesPanel()
 	end
 
 	return base
+end
+
+-- Entities tab: Base | Bombs
+local function BuildEntitiesPanel()
+	return BuildColumnsPanel(PS.ENTITY_CATEGORY_ORDER, PS.GetEntityItemsByCategory(), "No entities in this category.")
+end
+
+-- Bonuses tab: Survivability | Offensive | Special
+local function BuildBonusesPanel()
+	return BuildColumnsPanel(PS.BONUS_TYPE_ORDER, PS.GetBonusItemsByCategory(), "No bonuses in this category.")
 end
 
 function PS.ShopUI.CreatePanel()
@@ -421,7 +431,7 @@ function PS.ShopUI.CreatePanel()
 	sheet:Dock(FILL)
 	sheet:DockMargin(4, 4, 4, 4)
 
-	local entities_panel = BuildCategoryPanel(PS.ITEM_TYPE_ENTITY, "No entities available.")
+	local entities_panel = BuildEntitiesPanel()
 	local weapons_panel  = BuildCategoryPanel(PS.ITEM_TYPE_WEAPON, "No weapons available.")
 	local bonuses_panel  = BuildBonusesPanel()
 
