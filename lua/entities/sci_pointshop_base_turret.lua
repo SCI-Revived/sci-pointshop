@@ -20,7 +20,7 @@ ENT.BaseMaterial = "models/effects/intro_tearshape"
 ENT.BaseColor = Color(255, 255, 255, 255)
 ENT.BoneScale = Vector(1, 1, 1)
 
-ENT.AttachmentDrawDistance = 7500
+ENT.AttachmentDrawDistance = 15000
 ENT.LabelDrawDistance = 300
 ENT.Decaytime = -1
 
