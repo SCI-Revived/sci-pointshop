@@ -57,6 +57,10 @@ ENT.DeadZoneSphereColorWire = Color(255, 60, 60, 200) --200
 
 ENT.SphereDrawDistance = 16000
 
+-- Whether the range grid (detection + dead zone spheres) is shown when
+-- looking at the interceptor. Toggled from the Use menu at runtime.
+ENT.ShowRangeGrid = true
+
 ENT.ScanInterval = 0.25
 
 ENT.MissilesLoaded = 4
@@ -464,6 +468,7 @@ if SERVER then
 		self:SetUseType(SIMPLE_USE)
 
 		self:SetNW2Bool("Active", self.Active)
+		self:SetNW2Bool("ShowRangeGrid", self.ShowRangeGrid ~= false)
 
 		self.HasPower = false
 		self:SetNWBool("HasPower", false)
@@ -492,6 +497,7 @@ if SERVER then
 		end)
 
 		self:RefreshToggleButton()
+		self:RefreshRangeGridButton()
 	end
 
 	function ENT:RefreshToggleButton()
@@ -531,6 +537,22 @@ if SERVER then
 				self.TrackedSet = nil
 			end
 		end
+	end
+
+	function ENT:RefreshRangeGridButton()
+		self:RemoveMenuButton("toggle_range_grid")
+		self:AddMenuButton(
+			"toggle_range_grid",
+			self:GetNW2Bool("ShowRangeGrid", true) and "Range Grid: ON" or "Range Grid: OFF",
+			function(ent, activator)
+				ent:ToggleRangeGrid()
+			end
+		)
+	end
+
+	function ENT:ToggleRangeGrid()
+		self:SetNW2Bool("ShowRangeGrid", not self:GetNW2Bool("ShowRangeGrid", true))
+		self:RefreshRangeGridButton()
 	end
 
 	net.Receive("ery_interceptor_toggle", function(_, ply)
@@ -1483,7 +1505,7 @@ if CLIENT then
 
 		self:DrawLabel()
 
-		if self:IsLookingAtForDome() then
+		if self:GetNW2Bool("ShowRangeGrid", true) and self:IsLookingAtForDome() then
 			self:DrawDetectionDome()
 		end
 	end
