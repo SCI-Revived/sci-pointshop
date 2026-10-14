@@ -62,13 +62,13 @@ if SERVER then
         if not IsValid(ply) or not ply:IsPlayer() then return end
 
         -- Make sure the chassis is free to move before grabbing it
-        local phys = self:GetPhysicsObject()
-        if IsValid(phys) then
-            phys:EnableMotion(true)
-            phys:Wake()
-        end
+        --local phys = self:GetPhysicsObject()
+        --if IsValid(phys) then
+            --phys:EnableMotion(true)
+            --phys:Wake()
+        --end
 
-        ply:PickupObject(self)
+        --ply:PickupObject(self)
     end
 
     function ENT:SpawnBarrel()
