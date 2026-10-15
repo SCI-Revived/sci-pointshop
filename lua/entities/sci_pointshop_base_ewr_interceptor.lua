@@ -41,7 +41,7 @@ ENT.CollideSounds = {
 -- Interceptor settings
 ---------------------------------------------------------
 
-ENT.DetectionRadius = 8000
+ENT.DetectionRadius = 14000
 
 ENT.MinTargetDistance = 1250
 
