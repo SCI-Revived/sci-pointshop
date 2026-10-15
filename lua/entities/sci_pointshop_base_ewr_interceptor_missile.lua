@@ -134,7 +134,7 @@ function ENT:FollowTarget( followent )
 	-- MISSILE PERFORMANCE
 	-- ============================================================
 
-	local speed = (self:GetStartVelocity() + (self:GetDirtyMissile() and 3000 or 2500)) * 1.1
+	local speed = (self:GetStartVelocity() + (self:GetDirtyMissile() and 3000 or 2500)) * 1.25
 
 	-- Lower values = less maneuverable / easier to evade.
 	local turnrate = (self:GetCleanMissile() or self:GetDirtyMissile()) and 100 or 65
