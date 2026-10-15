@@ -456,6 +456,20 @@ if SERVER then
             end
         end
 
+		-- The bomb's own PhysicsCollide has no grace period and doesn't ignore the
+		-- cannon, so disable its impact fuse until the grace window is over. The
+		-- callback below takes over impact detonation (with grace + cannon filter).
+		if IsGBombClass(self.LoadedAmmoClass) and shell.ShouldExplodeOnImpact then
+			local origImpact = shell.ShouldExplodeOnImpact
+			shell.ShouldExplodeOnImpact = false
+
+			timer.Simple(self.FiredImpactGrace, function()
+				if IsValid(shell) then
+					shell.ShouldExplodeOnImpact = origImpact
+				end
+			end)
+		end
+
         -- Detonate on physics impact. A callback is used (rather than
         -- overriding PhysicsCollide) so the bomb's own collision logic stays
         -- intact. The explosion is deferred via EnqueueExplosion (same as the

@@ -41,7 +41,7 @@ ENT.CollideSounds = {
 -- Interceptor settings
 ---------------------------------------------------------
 
-ENT.DetectionRadius = 18000
+ENT.DetectionRadius = 14000
 
 ENT.MinTargetDistance = 1250
 
@@ -65,7 +65,7 @@ ENT.ScanInterval = 0.25
 
 ENT.MissilesLoaded = 4
 
-ENT.VolleyFireDelay = 0.25
+ENT.VolleyFireDelay = 0.5
 
 -- Highest number of distinct targets a single volley will engage
 -- (one target per missile, at most). Smart targeting never
@@ -86,7 +86,7 @@ ENT.MissileSpread = 15
 ENT.Active = true
 
 ENT.PowerRole = "consumer"
-ENT.PowerRequired = 150
+ENT.PowerRequired = 200
 
 ENT.TargetClassPrefix = "gb5_"
 

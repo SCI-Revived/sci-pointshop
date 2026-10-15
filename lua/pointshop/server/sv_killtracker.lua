@@ -11,7 +11,11 @@ Point blank: kill within X units
 Assist: someone else damaged the victim recently but a different player got the finishing blow
 Double/Triple/Multikill : N kills by the same attacker within a 3 second window
 
+Armor Kill: victim was in a vehicle when killed (+ArmorKillBonus). Applies whether or not the attacker was in a vehicle
+Vehicle Penalty: attacker was in a vehicle and the victim was NOT; the kill total is scaled to VehicleKillMultiplier (40%)
+
 All bonuses stack additively on top of the 100 point base kill reward.
+The one exception is the Vehicle Penalty, which scales the entire pre-passive total and is applied right before the Payday / Double Down multipliers.
 ]]
 
 PS = PS or {}
@@ -30,6 +34,10 @@ KT.DamageLog = KT.DamageLog or {}
 KT.KillTimestamps = KT.KillTimestamps or {}
 
 KT.LastAttackerEnt = KT.LastAttackerEnt or {}
+
+-- Vehicle state captured at damage time, since a player may already have been ejected from their vehicle by the time PlayerDeath fires.
+KT.VictimInVehicle = KT.VictimInVehicle or {}
+KT.AttackerInVehicle = KT.AttackerInVehicle or {}
 
 -- Helpers
 local function SID(ply)
@@ -113,8 +121,12 @@ hook.Add("EntityTakeDamage", "PS_KillTracker_TrackDamage", function(target, dmgi
 
 	local attacker = dmginfo:GetAttacker()
 
+	-- Updated on every hit (any damage source) so it always reflects the state at the lethal hit
+	KT.VictimInVehicle[target] = target:InVehicle()
+
 	if IsValid(attacker) and attacker:IsPlayer() and attacker ~= target then
 		KT.LastAttackerEnt[target] = attacker
+		KT.AttackerInVehicle[target] = attacker:InVehicle()
 		LogDamage(target, attacker, dmginfo)
 	end
 end)
@@ -135,6 +147,13 @@ hook.Add("PlayerDeath", "PS_KillTracker_HandleKill", function(victim, inflictor,
 
 	PS.KillTracker.ApplyDeathPenalty(victim)
 
+	-- Snapshot vehicle state before the tracking tables are cleared
+	local vehicle_state = {
+		victim_in_vehicle = KT.VictimInVehicle[victim] or victim:InVehicle(),
+		killer_in_vehicle = IsValid(killer) and (KT.AttackerInVehicle[victim] or killer:InVehicle()) or false,
+	}
+	KT.VictimInVehicle[victim] = nil
+	KT.AttackerInVehicle[victim] = nil
 	KT.LastAttackerEnt[victim] = nil
 
 	if not killer or killer == victim then
@@ -144,7 +163,7 @@ hook.Add("PlayerDeath", "PS_KillTracker_HandleKill", function(victim, inflictor,
 	local ksid = SID(killer)
 	if not ksid or not vsid then return end
 
-	PS.KillTracker.ProcessKill(killer, victim, ksid, vsid)
+	PS.KillTracker.ProcessKill(killer, victim, ksid, vsid, vehicle_state)
 end)
 
 -- Death Penalty: lose x% of net worth, clamped between PS.Config.DeathLossMin and PS.Config.DeathLossMax, never going below 0 net worth.
@@ -192,12 +211,20 @@ function PS.KillTracker.ApplyDeathPenalty(victim)
 end
 
 -- Kill reward processing
-function PS.KillTracker.ProcessKill(killer, victim, ksid, vsid)
+function PS.KillTracker.ProcessKill(killer, victim, ksid, vsid, vehicle_state)
 	local breakdown = {} -- list of { label = string, amount = number }
 	local total = PS.Config.KillReward
 	table.insert(breakdown, { label = "Kill", amount = PS.Config.KillReward })
 
 	local now = Now()
+
+	-- Falls back to a live check if ProcessKill is called from elsewhere without a snapshot
+	vehicle_state = vehicle_state or {
+		victim_in_vehicle = IsValid(victim) and victim:InVehicle() or false,
+		killer_in_vehicle = IsValid(killer) and killer:InVehicle() or false,
+	}
+	local victim_in_vehicle = vehicle_state.victim_in_vehicle
+	local killer_in_vehicle = vehicle_state.killer_in_vehicle
 
 	-- Headshot
 	local was_headshot = IsValid(victim) and victim:LastHitGroup() == HITGROUP_HEAD
@@ -247,6 +274,13 @@ function PS.KillTracker.ProcessKill(killer, victim, ksid, vsid)
 		end
 	end
 
+	-- Armor Kill (victim was in a vehicle; attacker's vehicle state doesn't matter)
+	if victim_in_vehicle then
+		local armor_bonus = PS.Config.ArmorKillBonus or 250
+		total = total + armor_bonus
+		table.insert(breakdown, { label = "Armor Kill", amount = armor_bonus })
+	end
+
 	-- Assist
 	local assister_sid = FindAssister(vsid, ksid)
 	if assister_sid then
@@ -283,6 +317,17 @@ function PS.KillTracker.ProcessKill(killer, victim, ksid, vsid)
 	elseif recent_kill_count >= 4 then
 		total = total + PS.Config.MultiKillBonus
 		table.insert(breakdown, { label = "MULTIKILL!", amount = PS.Config.MultiKillBonus })
+	end
+
+	-- Vehicle penalty (attacker in a vehicle, victim on foot): scale the whole total.
+	-- Mutually exclusive with Armor Kill, since that requires the victim to be in a vehicle.
+	if killer_in_vehicle and not victim_in_vehicle then
+		local pre_penalty_total = total
+		total = math.floor(total * (PS.Config.VehicleKillMultiplier or 0.4))
+		local penalty = total - pre_penalty_total
+		if penalty ~= 0 then
+			table.insert(breakdown, { label = "Infantry Kill", amount = penalty })
+		end
 	end
 
 	-- Point multipliers
@@ -343,4 +388,6 @@ hook.Add("PlayerDisconnected", "PS_KillTracker_Cleanup", function(ply)
 		KT.KillTimestamps[sid] = nil
 	end
 	KT.LastAttackerEnt[ply] = nil
+	KT.VictimInVehicle[ply] = nil
+	KT.AttackerInVehicle[ply] = nil
 end)

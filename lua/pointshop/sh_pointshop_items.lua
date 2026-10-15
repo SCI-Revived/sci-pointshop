@@ -163,6 +163,13 @@ PS.Items = {
 		Icon = "entities/sci_pointshop_base_ewr_interceptor.png",
 		Description = "Motion based SAM platform that intercepts players and incoming GBombs munitions. Can retain up to 4 targets at once. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
 	},
+	["lvs_vehicle_air_refil"] = {
+		Name = "Ammo Refill Balloon",
+		BasePrice = 250,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/lvs_vehicle_air_refil.png",
+		Description = "Spawn a floating hot air balloon that refills your LVS vehicle's ammo when nearby.",
+	},
 	["sci_pointshop_base_ewr_screen"] = {
 		Name = "EWR Screen",
 		BasePrice = 1000,
@@ -565,6 +572,6 @@ end
 		BasePrice = 800,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
-		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
+		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 125 power in order to run.",
 	},
 ]]--

@@ -7,7 +7,7 @@ PS.Config = PS.Config or {}
 PS.Config.MaxPoints            = 100000 -- Max points a player can have.
 PS.Config.JoinBonus            = 500    -- points awarded to players on first join
 PS.Config.KillReward           = 100    -- base points for a kill
-PS.Config.DeathLossPercent     = 0.025  -- % of net worth lost on death. 2.5% by default.
+PS.Config.DeathLossPercent     = 0.015  -- % of net worth lost on death. 2.5% by default.
 PS.Config.DeathLossMin         = 1      -- minimum points lost on death. minimum is 1 by default
 PS.Config.DeathLossMax         = 1500   -- maximum points lost on death. maximum is 1000 by default.
 
@@ -28,7 +28,7 @@ PS.Config.AssistBonus          = 25
 PS.Config.DoubleKillBonus      = 50
 PS.Config.TripleKillBonus      = 100
 PS.Config.MultiKillBonus       = 250
-PS.Config.MultiKillWindow      = 3      -- seconds
+PS.Config.MultiKillWindow      = 5      -- seconds
 
 PS.Config.DoubleDownMultiplier = 2
 PS.Config.LuckyFiveChance      = 0.25   -- % chance to trigger Lucky Five. Default is 25%. I don't suggest changing this because it would require you to change scieffects.lua and the pointshop description.
@@ -36,6 +36,9 @@ PS.Config.PaydayBonus          = 0.25   -- bonus point % from Payday. Default is
 
 PS.Config.RevengeWindow        = 20     -- seconds a death is remembered for Payback/Avenger checks
 PS.Config.AssistWindow         = 15     -- seconds a damage instance counts toward an assist
+
+PS.Config.ArmorKillBonus = 250 --Bonus points for killing a player that is inside a vehicle
+PS.Config.VehicleKillMultiplier = 0.4 --Point multiplier for killing infantry while inside a vehicle. Ideally always a value less than 1.
 
 -- Dynamic Pricing Config
 

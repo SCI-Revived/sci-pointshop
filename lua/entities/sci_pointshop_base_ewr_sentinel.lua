@@ -14,14 +14,12 @@ ENT.IconOffset = Vector(120, 0, -15)
 
 -- Placeholder model: swap freely.
 ENT.BaseModel = "models/hunter/blocks/cube4x4x4.mdl"
-ENT.BaseMaterial = "" --models/effects/intro_tearshape
+ENT.BaseMaterial = "models/effects/intro_tearshape" --models/effects/intro_tearshape
 ENT.BaseColor = Color(80, 90, 100, 255)
 ENT.BoneScale = Vector(1, 1, 1)
 
--- Intentionally empty: this entity has no attachments, but the
--- base class may still expect the table to exist.
-ENT.Attachments = {}
-
+-- ENT.Attachments is built in the "Turret rig" section below.
+ENT.AttachmentDrawDistance = 32000
 ENT.LabelDrawDistance = 300
 ENT.Decaytime = -1
 
@@ -57,19 +55,23 @@ ENT.DeadZoneSphereColorWire = Color(255, 60, 60, 200)
 
 ENT.SphereDrawDistance = 26000
 
+-- Whether the range grid (detection + dead zone spheres) is shown when
+-- looking at the sentinel. Toggled from the Use menu at runtime.
+ENT.ShowRangeGrid = true
+
 ENT.TargetClassPrefix = "gb5_"
 ENT.TARGET_PRIORITY_PLAYER = 1
 ENT.TARGET_PRIORITY_PREFIXED = 2
 
 -- Gun
-ENT.MuzzleOffset = Vector(0, 0, 40)  -- local to the entity
+ENT.MuzzleOffset = Vector(0, 0, 40)  -- local to the entity; only a fallback, rounds normally leave from the MuzzleAttachmentIDs slots below
 ENT.FireSound = "apc_fire"
-ENT.FireDelay = 0.035               -- seconds between shots (60 / 3400 RPM)
-ENT.BurstSize = 20                   -- rounds per burst
+ENT.FireDelay = 0.05               -- seconds between shots (60 / 3400 RPM)
+ENT.BurstSize = 40                   -- rounds per burst
 ENT.BurstDelay = 2                   -- seconds from the end of one burst to the start of the next
-ENT.MagazineSize = 60                -- 3 bursts per magazine
+ENT.MagazineSize = 120                -- 3 bursts per magazine
 ENT.ReloadDuration = 6               -- seconds
-ENT.Spread = 0.35                    -- degrees, random cone half-angle
+ENT.Spread = 0.5                    -- degrees, random cone half-angle
 ENT.MaxShotsPerThink = 4             -- catch-up cap if the server tickrate is below the fire rate
 
 -- Projectile (passed to simfphys.FirePhysProjectile)
@@ -77,11 +79,11 @@ ENT.MaxShotsPerThink = 4             -- catch-up cap if the server tickrate is b
 -- (66.666/s) and defaults to 200, i.e. ~13333 u/s. This must match what
 -- the projectile really does, or every lead calculation is off.
 ENT.ProjectileSpeed = 11500          -- units/second; used for lead calculation
-ENT.ProjectileDamage = 50
+ENT.ProjectileDamage = 25
 ENT.ProjectileForce = 1
 ENT.ProjectileSize = 7
 ENT.ProjectileBlastRadius = 200
-ENT.ProjectileBlastDamage = 50
+ENT.ProjectileBlastDamage = 25
 ENT.ProjectileDeflectAng = 0
 ENT.ProjectileBlastEffect = "simfphys_tankweapon_explosion_micro"
 
@@ -105,7 +107,198 @@ ENT.MaxLeadTime = 3                  -- seconds, safety clamp on flight time
 ENT.Active = true
 
 ENT.PowerRole = "consumer"
-ENT.PowerRequired = 150
+ENT.PowerRequired = 125
+
+---------------------------------------------------------
+-- Turret rig (9K22 Tunguska-style mockup)
+--
+-- Shared on purpose: the client draws ENT.Attachments, and the
+-- server reads the very same table to find where each round
+-- leaves from, so muzzle positions live in exactly one place.
+--
+-- Attachment chain (built below with Add(), which hands out the
+-- IDs, so Parent links are variables rather than magic numbers):
+--
+--   entity ......... the base plate; never moves
+--    |- HULL ........ fixed anchor on the plate (tracks, deck, glacis)
+--    `- YAW ......... yaw pivot (Angle.y is driven toward the target)
+--        |- ring, turret body, search radar (turn with the yaw)
+--        `- PITCH .... pitch pivot (Angle.p is driven toward the
+--            |                      target, clamped to Min/MaxElevation)
+--            |- tracking radar
+--            |- per side: breech housing, barrel shroud, missile pod
+--            `- per side, twin barrels: barrel, muzzle brake and an
+--               invisible MUZZLE slot at the tip, fired in the order
+--               listed in MuzzleAttachmentIDs
+--
+-- Both gun mounts share the one pitch pivot, as on the real
+-- vehicle: the whole turret yaws, and the guns, pods and tracking
+-- radar elevate together.
+--
+-- Conventions inherited from ERY_MACHINE:DrawAttachments: Pos is
+-- +X forward, +Y RIGHT (it multiplies Right() by Pos.y) and +Z up;
+-- and its RotateAroundAxis composition makes a positive Angle.p
+-- tilt the nose UP, the opposite of native Source angles -- so
+-- Angle.p is simply the elevation.
+--
+-- Rules the code relies on, if you rearrange things:
+--   * the pitch pivot sits ON the yaw axis (Pos.x = Pos.y = 0)
+--   * muzzle slots are direct children of the pitch pivot
+--   * a parent is always added before its children
+---------------------------------------------------------
+
+ENT.TurretMinElevation = -5        -- degrees
+ENT.TurretMaxElevation = 85
+ENT.TurretIdleElevation = 5        -- where the guns rest with no target
+ENT.TurretYawSpeed = 200           -- degrees/second (client visual only)
+ENT.TurretPitchSpeed = 100
+
+-- If the guns ever tilt DOWN toward a target above them, flip this
+-- to -1 (see the conventions note above).
+ENT.TurretPitchSign = 1
+
+-- Placeholder geometry (units). Everything is a cube shaped with
+-- AxisScale, so Dim() takes real sizes: length (forward), width
+-- (left-right), height. Swap models/colors freely.
+local PLATE_TOP = -80.5            -- top face of the base plate, relative to the entity origin
+local BLOCK = "models/hunter/blocks/cube025x025x025.mdl"
+local BLOCK_SIZE = 11.875          -- edge length of BLOCK
+
+local TRACK_H = 24                 -- track height
+local DECK_H = 12                  -- hull deck thickness
+local HULL_TOP = TRACK_H + DECK_H  -- top of the hull, above the plate
+local RING_H = 4                   -- turret ring thickness
+local BODY_H = 34                  -- turret body height
+local PIVOT_HEIGHT = HULL_TOP + RING_H + BODY_H / 2  -- yaw axis -> pitch axis (turret mid-height)
+
+local GUN_SIDE = 42                -- centre line of each gun mount, left/right of the axis
+local BARREL_SPACING = 11          -- vertical gap between the twin barrels
+local BARREL_LEN = 100
+local BARREL_START = 16            -- front of the breech housing; the shroud and barrels start here
+local POD_SIDE = 57                -- centre line of each missile pod
+
+local HULL_COLOR = Color(105, 115, 80)
+local DARK_COLOR = Color(45, 45, 48)
+local GUN_COLOR = Color(70, 72, 76)
+local PART_MATERIAL = "metal5"
+
+local function Dim(length, width, height)
+	return Vector(length / BLOCK_SIZE, width / BLOCK_SIZE, height / BLOCK_SIZE)
+end
+
+ENT.Attachments = {}
+
+-- Appends def to the table and returns its ID (= its array position,
+-- which is what DrawAttachments and the server's slot lookup use).
+local function Add(def)
+	local list = ENT.Attachments
+
+	def.ID = #list + 1
+	def.Parent = def.Parent or 0
+	list[def.ID] = def
+
+	return def.ID
+end
+
+-- Visible cube. pos is relative to the parent attachment.
+local function Part(parent, pos, dim, color, ang)
+	return Add({
+		Model = BLOCK,
+		Pos = pos,
+		Angle = ang or Angle(0, 0, 0),
+		Color = color,
+		Material = PART_MATERIAL,
+		AxisScale = dim,
+		Parent = parent,
+	})
+end
+
+-- Invisible pivot / marker. An empty Model is a pure pivot.
+local function Pivot(parent, pos)
+	return Add({
+		Model = "",
+		Pos = pos,
+		Angle = Angle(0, 0, 0),
+		Parent = parent,
+	})
+end
+
+-- Fixed hull: parented to a static anchor on the plate, never
+-- to the yaw, so it stays put while the turret turns.
+local HULL = Pivot(0, Vector(0, 0, PLATE_TOP))
+
+for _, side in ipairs({ 1, -1 }) do
+	Part(HULL, Vector(0, side * 40, TRACK_H / 2), Dim(168, 22, TRACK_H), DARK_COLOR)
+end
+
+Part(HULL, Vector(0, 0, TRACK_H + DECK_H / 2), Dim(164, 102, DECK_H), HULL_COLOR)
+Part(HULL, Vector(84, 0, TRACK_H + 2), Dim(30, 102, 16), HULL_COLOR, Angle(-30, 0, 0)) -- sloped nose
+
+-- Yaw pivot. Angle.y is animated on the client (see ENT:Think below).
+local YAW = Pivot(0, Vector(0, 0, PLATE_TOP))
+
+Part(YAW, Vector(0, 0, HULL_TOP + RING_H / 2), Dim(74, 74, RING_H), DARK_COLOR)                    -- turret ring
+Part(YAW, Vector(-6, 0, HULL_TOP + RING_H + BODY_H / 2), Dim(88, 66, BODY_H), HULL_COLOR)          -- turret body
+Part(YAW, Vector(-34, 0, HULL_TOP + RING_H + BODY_H + 9), Dim(7, 7, 18), DARK_COLOR)               -- search radar mast
+Part(YAW, Vector(-34, 0, HULL_TOP + RING_H + BODY_H + 32), Dim(4, 50, 28), HULL_COLOR, Angle(12, 0, 0)) -- search radar panel
+
+-- Pitch pivot. Must sit on the yaw axis (Pos.x and Pos.y = 0):
+-- ENT:GetTurretAim relies on it. Angle.p is animated on the client.
+local PITCH = Pivot(YAW, Vector(0, 0, PIVOT_HEIGHT))
+
+-- Tracking radar, front centre between the gun mounts.
+Part(PITCH, Vector(20, 0, 27), Dim(26, 20, 16), DARK_COLOR)
+Part(PITCH, Vector(35, 0, 29), Dim(4, 26, 22), GUN_COLOR, Angle(8, 0, 0))
+
+-- Gun mounts + missile pods, one of each per side (+Y is right).
+-- muzzles[level][side]: level 1 = upper barrel, 2 = lower.
+local muzzles = { {}, {} }
+
+for _, side in ipairs({ 1, -1 }) do
+	local y = side * GUN_SIDE
+
+	Part(PITCH, Vector(0, y, 0), Dim(32, 16, 26), HULL_COLOR)       -- breech housing
+	Part(PITCH, Vector(BARREL_START + 18, y, 0), Dim(36, 12, 19), GUN_COLOR) -- barrel shroud
+
+	for level, z in ipairs({ BARREL_SPACING / 2, -BARREL_SPACING / 2 }) do
+		Part(PITCH, Vector(BARREL_START + BARREL_LEN / 2, y, z), Dim(BARREL_LEN, 6, 6), GUN_COLOR)
+		Part(PITCH, Vector(BARREL_START + BARREL_LEN - 4, y, z), Dim(10, 9, 9), DARK_COLOR) -- muzzle brake
+
+		-- Where rounds leave from: just past the muzzle brake.
+		muzzles[level][side] = Pivot(PITCH, Vector(BARREL_START + BARREL_LEN + 4, y, z))
+	end
+
+	Part(PITCH, Vector(14, side * POD_SIDE, 4), Dim(48, 14, 24), HULL_COLOR)   -- missile pod
+	Part(PITCH, Vector(37, side * POD_SIDE, 4), Dim(3, 12, 20), DARK_COLOR)    -- pod tube openings
+end
+
+ENT.YawAttachmentID = YAW
+ENT.PitchAttachmentID = PITCH
+
+-- Firing order, one round from the next slot each shot, cycling:
+-- right-upper, left-upper, right-lower, left-lower. Drop entries to
+-- fire from fewer barrels; every slot must be a child of PITCH.
+ENT.MuzzleAttachmentIDs = {
+	muzzles[1][1], muzzles[1][-1],
+	muzzles[2][1], muzzles[2][-1],
+}
+
+-- Same composition ERY_MACHINE:DrawAttachments uses to place a child
+-- relative to its parent -- kept identical on purpose, so poses
+-- computed here match what the client actually draws.
+local function ChildTransform(parentPos, parentAng, pos, ang)
+	local worldPos = parentPos
+		+ parentAng:Forward() * pos.x
+		+ parentAng:Right()   * pos.y
+		+ parentAng:Up()      * pos.z
+
+	local worldAng = Angle(parentAng.p, parentAng.y, parentAng.r)
+	worldAng:RotateAroundAxis(parentAng:Up(), ang.y)
+	worldAng:RotateAroundAxis(parentAng:Right(), ang.p)
+	worldAng:RotateAroundAxis(parentAng:Forward(), ang.r)
+
+	return worldPos, worldAng
+end
 
 if SERVER then
 	util.AddNetworkString("ery_sentinel_open")
@@ -123,6 +316,7 @@ if SERVER then
 		self:SetUseType(SIMPLE_USE)
 
 		self:SetNW2Bool("Active", self.Active)
+		self:SetNW2Bool("ShowRangeGrid", self.ShowRangeGrid ~= false)
 
 		self.HasPower = false
 		self:SetNWBool("HasPower", false)
@@ -137,6 +331,9 @@ if SERVER then
 		self.BurstShotsFired = 0
 		self.ReloadEndTime = 0
 
+		-- Next muzzle slot to fire from (index into MuzzleAttachmentIDs).
+		self.MuzzleIndex = 1
+
 		self.CurrentTarget = NULL
 		self:SetNWEntity("CurrentTarget", NULL)
 
@@ -149,6 +346,7 @@ if SERVER then
 		end)
 
 		self:RefreshToggleButton()
+		self:RefreshRangeGridButton()
 	end
 
 	function ENT:SetState(state)
@@ -204,6 +402,22 @@ if SERVER then
 		if not self.Active then
 			self:ClearTarget()
 		end
+	end
+
+	function ENT:RefreshRangeGridButton()
+		self:RemoveMenuButton("toggle_range_grid")
+		self:AddMenuButton(
+			"toggle_range_grid",
+			self:GetNW2Bool("ShowRangeGrid", true) and "Range Grid: ON" or "Range Grid: OFF",
+			function(ent, activator)
+				ent:ToggleRangeGrid()
+			end
+		)
+	end
+
+	function ENT:ToggleRangeGrid()
+		self:SetNW2Bool("ShowRangeGrid", not self:GetNW2Bool("ShowRangeGrid", true))
+		self:RefreshRangeGridButton()
 	end
 
 	net.Receive("ery_sentinel_toggle", function(_, ply)
@@ -585,8 +799,97 @@ if SERVER then
 		self.ReloadEndTime = CurTime() + (self.ReloadDuration or 4)
 	end
 
+	-- Fallback only: used when MuzzleAttachmentIDs has no usable slot.
 	function ENT:GetMuzzlePos()
 		return self:LocalToWorld(self.MuzzleOffset or Vector(0, 0, 40))
+	end
+
+	-- World position of the pitch pivot. It sits on the yaw axis, so
+	-- this is the one fixed point the turret's aim is solved from.
+	function ENT:GetPivotWorldPos()
+		local yawAttach = self.Attachments[self.YawAttachmentID]
+		local pitchAttach = self.Attachments[self.PitchAttachmentID]
+
+		local yawPos, yawAng = ChildTransform(
+			self:GetPos(), self:GetAngles(),
+			yawAttach.Pos or vector_origin, angle_zero
+		)
+
+		return (ChildTransform(yawPos, yawAng, pitchAttach.Pos or vector_origin, angle_zero))
+	end
+
+	-- Yaw and pitch (in the units the attachments' Angle uses) that
+	-- point the turret at targetPos. Yaw is unlimited; pitch is
+	-- clamped to Min/MaxElevation. The client animates the turret
+	-- toward this (networked by UpdateAim) and the server places each
+	-- round's muzzle with it, so the two always agree.
+	function ENT:GetTurretAim(targetPos)
+		local selfAng = self:GetAngles()
+		local toTarget = targetPos - self:GetPivotWorldPos()
+
+		-- Split into the entity's own frame: forward, LEFT (the direction
+		-- native positive yaw turns toward) and up.
+		local fwd = toTarget:Dot(selfAng:Forward())
+		local left = -toTarget:Dot(selfAng:Right())
+		local up = toTarget:Dot(selfAng:Up())
+
+		local yaw = math.deg(math.atan2(left, fwd))
+		local elevation = math.deg(math.atan2(up, math.sqrt(fwd * fwd + left * left)))
+
+		elevation = math.Clamp(
+			elevation,
+			self.TurretMinElevation or 0,
+			self.TurretMaxElevation or 85
+		)
+
+		return yaw, elevation * (self.TurretPitchSign or 1)
+	end
+
+	-- World position of a muzzle slot for a turret posed at (yaw,
+	-- pitch). Walks the same chain the client draws (entity -> yaw
+	-- pivot -> pitch pivot -> slot) using the shared ENT.Attachments
+	-- offsets, so nothing is duplicated.
+	function ENT:GetTurretSlotPose(slotID, yaw, pitch)
+		local yawAttach = self.Attachments[self.YawAttachmentID]
+		local pitchAttach = self.Attachments[self.PitchAttachmentID]
+		local slotAttach = self.Attachments[slotID]
+
+		local yawPos, yawAng = ChildTransform(
+			self:GetPos(), self:GetAngles(),
+			yawAttach.Pos or vector_origin, Angle(0, yaw, 0)
+		)
+
+		local pitchPos, pitchAng = ChildTransform(
+			yawPos, yawAng,
+			pitchAttach.Pos or vector_origin, Angle(pitch, 0, 0)
+		)
+
+		local slotPos = ChildTransform(
+			pitchPos, pitchAng,
+			slotAttach.Pos or vector_origin, slotAttach.Angle or angle_zero
+		)
+
+		return slotPos, pitchAng
+	end
+
+	-- Points the turret at the *lead* point (where the rounds will
+	-- actually meet the target), stores the pose for FireAt and
+	-- networks it for the client to animate toward. Networked only
+	-- when it has moved a meaningful amount, so a steady target
+	-- doesn't cost a packet every tick.
+	function ENT:UpdateAim(target)
+		local lead = self:GetAimPoint(target, self:GetPivotWorldPos())
+		local yaw, pitch = self:GetTurretAim(lead)
+
+		self.AimYaw, self.AimPitch = yaw, pitch
+
+		if not self.NetAimYaw
+			or math.abs(math.AngleDifference(yaw, self.NetAimYaw)) > 0.1
+			or math.abs(pitch - self.NetAimPitch) > 0.1 then
+			self.NetAimYaw, self.NetAimPitch = yaw, pitch
+			self:SetNWFloat("AimYaw", yaw)
+			self:SetNWFloat("AimPitch", pitch)
+		end
 	end
 
 	-- How far (units) the projectile has fallen below its straight-line
@@ -656,7 +959,22 @@ if SERVER then
 			return false
 		end
 
-		local origin = self:GetMuzzlePos()
+		-- Each round leaves from the next barrel in turn (see
+		-- MuzzleAttachmentIDs), at that barrel's position for the pose
+		-- the turret is aiming in -- not from one shared point. Lead is
+		-- then solved from that exact muzzle, so every barrel's rounds
+		-- converge on the target.
+		local slots = self.MuzzleAttachmentIDs
+		local slotID = slots and slots[self.MuzzleIndex or 1]
+		local origin
+
+		if slotID and self.Attachments[slotID] then
+			if not self.AimYaw then self:UpdateAim(target) end
+			origin = self:GetTurretSlotPose(slotID, self.AimYaw, self.AimPitch)
+		else
+			origin = self:GetMuzzlePos()
+		end
+
 		local aimPos = self:GetAimPoint(target, origin)
 
 		-- Random spread: a small cone around the lead direction.
@@ -684,6 +1002,11 @@ if SERVER then
 			-- (the projectile then uses its default of 200 = 13333 u/s).
 			MuzzleVelocity = (self.ProjectileSpeed or 13333) / 66.666,
 		})
+
+		-- Only a round that actually left advances the cycle.
+		if slots and #slots > 0 then
+			self.MuzzleIndex = ((self.MuzzleIndex or 1) % #slots) + 1
+		end
 
 		return true
 	end
@@ -771,6 +1094,7 @@ if SERVER then
 					-- Keep tracking even between bursts so the
 					-- acceleration estimate is ready when firing resumes.
 					self:UpdateTracking(target, currentTime)
+					self:UpdateAim(target)
 
 					if currentTime >= (self.NextBurstTime or 0) then
 						self:FireBurstStep(target, currentTime)
@@ -798,7 +1122,45 @@ end
 
 if CLIENT then
 	function ENT:Initialize()
-		self.Attachments = self.Attachments or {}
+		-- Own copy per entity: the turret animation below writes into
+		-- the attachment entries, and the class table is shared by every
+		-- sentinel, so without this they would all move as one.
+		self.Attachments = table.Copy(self.Attachments or {})
+	end
+
+	-- Animates the turret rig, purely visually, from networked state:
+	-- the server says whether there is a target ("CurrentTarget") and
+	-- the yaw/pitch to point at ("AimYaw"/"AimPitch", already solved
+	-- for lead). Angles are replaced with new Angle objects rather
+	-- than edited in place.
+	function ENT:Think()
+		local attachments = self.Attachments
+		if not attachments then return end
+
+		local yawAttach = attachments[self.YawAttachmentID]
+		local pitchAttach = attachments[self.PitchAttachmentID]
+		if not yawAttach or not pitchAttach then return end
+
+		local dt = FrameTime()
+
+		-- No target (idle, or reloading): hold the current heading and
+		-- settle to the rest elevation.
+		local currentYaw = yawAttach.Angle.y
+		local currentPitch = pitchAttach.Angle.p
+
+		local targetYaw = currentYaw
+		local targetPitch = (self.TurretIdleElevation or 0) * (self.TurretPitchSign or 1)
+
+		if IsValid(self:GetNWEntity("CurrentTarget", NULL)) then
+			targetYaw = self:GetNWFloat("AimYaw", targetYaw)
+			targetPitch = self:GetNWFloat("AimPitch", targetPitch)
+		end
+
+		local yaw = math.ApproachAngle(currentYaw, targetYaw, (self.TurretYawSpeed or 200) * dt)
+		local pitch = math.ApproachAngle(currentPitch, targetPitch, (self.TurretPitchSpeed or 100) * dt)
+
+		yawAttach.Angle = Angle(0, math.NormalizeAngle(yaw), 0)
+		pitchAttach.Angle = Angle(pitch, 0, 0)
 	end
 
 	---------------------------------------------------------
@@ -951,10 +1313,20 @@ if CLIENT then
 
 	function ENT:Draw()
 		self:DrawModel()
+
+		local attachDist = (self.AttachmentDrawDistance or 500)^2
+		if self:GetPos():DistToSqr(LocalPlayer():GetPos()) <= attachDist then
+			ERY_MACHINE:DrawAttachments(self, self.Attachments)
+		end
+
 		self:DrawLabel() -- base class label only
 
-		if self:IsLookingAtForDome() then
+		if self:GetNW2Bool("ShowRangeGrid", true) and self:IsLookingAtForDome() then
 			self:DrawDetectionDome()
 		end
+	end
+
+	function ENT:OnRemove()
+		ERY_MACHINE:CleanupAttachments(self)
 	end
 end
