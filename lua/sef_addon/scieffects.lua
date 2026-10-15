@@ -638,9 +638,9 @@ PassiveEffects.sci_passive_bleed = {
                     return
                 end
 
-                -- 10% chance to apply Bleed
-                if math.random(1, 100) <= 10 then
-					local bleedDamage = target:Health() * 0.02
+                -- 25% chance to apply Bleed
+                if math.random(1, 100) <= 25 then
+					local bleedDamage = target:Health() * 0.03
 					target:ApplyEffect("Bleeding", 10, bleedDamage, 1, attacker)
                 end
             end
