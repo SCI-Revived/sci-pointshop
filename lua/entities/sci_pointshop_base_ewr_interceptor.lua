@@ -25,7 +25,7 @@ ENT.Decaytime = -1
 
 ENT.CableOffset = Vector(0, 0, -80)
 
-ENT.MaxHealth = 1250
+ENT.MaxHealth = 2000
 ENT.HealthRegen = 5
 ENT.CustomMass = 400
 
@@ -41,11 +41,11 @@ ENT.CollideSounds = {
 -- Interceptor settings
 ---------------------------------------------------------
 
-ENT.DetectionRadius = 14000
+ENT.DetectionRadius = 18000
 
 ENT.MinTargetDistance = 1250
 
-ENT.MinTargetSpeed = 500
+ENT.MinTargetSpeed = 300
 
 ENT.MissileClass = "sci_pointshop_base_ewr_interceptor_missile"
 
@@ -55,7 +55,7 @@ ENT.DetectionSphereColorWire = Color(255, 160, 40, 200) --200
 ENT.DeadZoneSphereColor = Color(255, 60, 60, 20) --20
 ENT.DeadZoneSphereColorWire = Color(255, 60, 60, 200) --200
 
-ENT.SphereDrawDistance = 16000
+ENT.SphereDrawDistance = 24000
 
 -- Whether the range grid (detection + dead zone spheres) is shown when
 -- looking at the interceptor. Toggled from the Use menu at runtime.
@@ -73,7 +73,7 @@ ENT.VolleyFireDelay = 0.25
 -- split among them.
 ENT.MaxTargetsPerVolley = 4
 
-ENT.TargetAcquisitionDelay = 0.75
+ENT.TargetAcquisitionDelay = 0.6
 
 ENT.CooldownDuration = 6
 
