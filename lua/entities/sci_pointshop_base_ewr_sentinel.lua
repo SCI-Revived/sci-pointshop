@@ -27,7 +27,7 @@ ENT.Decaytime = -1
 
 ENT.CableOffset = Vector(0, 0, -80)
 
-ENT.MaxHealth = 1250
+ENT.MaxHealth = 1500
 ENT.HealthRegen = 5
 ENT.CustomMass = 400
 
