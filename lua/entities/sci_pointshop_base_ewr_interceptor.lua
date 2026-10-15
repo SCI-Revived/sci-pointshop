@@ -45,7 +45,7 @@ ENT.DetectionRadius = 14000
 
 ENT.MinTargetDistance = 1250
 
-ENT.MinTargetSpeed = 1000
+ENT.MinTargetSpeed = 500
 
 ENT.MissileClass = "sci_pointshop_base_ewr_interceptor_missile"
 
