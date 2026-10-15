@@ -109,7 +109,7 @@ PS.Items = {
 	---------------- Entities ----------------
 	["sci_pointshop_base_beacon"] = {
 		Name = "Beacon",
-		BasePrice = 3500,
+		BasePrice = 1250,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_beacon.png",
 		Description = "Grants positive status effects to players in proximity. Players must be manually whitelisted to be considered friendly. Can be customized. Requires 125 power in order to run.",
@@ -130,7 +130,7 @@ PS.Items = {
 	},
 	["sci_pointshop_fuelgenerator"] = {
 		Name = "Fuel Generator",
-		BasePrice = 1000,
+		BasePrice = 500,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_fuelgenerator.png",
 		Description = "Provides 250 power for your machines while active. Requires fuel in order to run. Can be placed anywhere.",
@@ -151,21 +151,21 @@ PS.Items = {
 	},
 	["sci_pointshop_power_rtg"] = {
 		Name = "Radioisotope Generator",
-		BasePrice = 1750,
+		BasePrice = 1000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_power_rtg.png",
 		Description = "Provides 125 power for your machines while active. Can be placed anywhere.",
 	},
 	["sci_pointshop_base_ewr_interceptor"] = {
 		Name = "Interceptor",
-		BasePrice = 2000,
+		BasePrice = 1250,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_ewr_interceptor.png",
 		Description = "Motion based SAM platform that intercepts players and incoming GBombs munitions. Can retain up to 4 targets at once. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
 	},
 	["sci_pointshop_base_ewr_screen"] = {
 		Name = "EWR Screen",
-		BasePrice = 1500,
+		BasePrice = 1000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_ewr_screen.png",
 		Description = "Detects spawned munitions and displays their location in world coordinates. Requires 50 power in order to run.",
@@ -179,28 +179,28 @@ PS.Items = {
 	},
 	["sci_pointshop_base_radar_screen"] = {
 		Name = "Radar Screen",
-		BasePrice = 2250,
+		BasePrice = 2000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_radar_screen.png",
 		Description = "Displays the location of players relative to it. Players must be manually whitelisted to be considered friendly. Requires 50 power in order to run.",
 	},
 	["sci_pointshop_base_repair"] = {
 		Name = "Auto-Repair Station",
-		BasePrice = 1500,
+		BasePrice = 750,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_repair.png",
 		Description = "Automatically repairs props and machines in a large radius around it. Requires 200 power in order to run. Does not stack if multiple are placed in the same radius.",
 	},
 	["sci_pointshop_base_turret"] = {
 		Name = "Sentry Turret",
-		BasePrice = 1250,
+		BasePrice = 500,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_turret.png",
 		Description = "Automatically targets hostile players while active. Players must be manually whitelisted to be considered friendly. Requires 100 power in order to run.",
 	},
 	["sci_pointshop_base_nukedevice"] = {
 		Name = "DIY Nuclear Bomb Kit",
-		BasePrice = 95000,
+		BasePrice = 35000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/sci_pointshop_base_nukedevice.png",
@@ -208,7 +208,7 @@ PS.Items = {
 	},
 	["gb5_heavy_b_t12"] = {
 		Name = "T12 Cloudmaker",
-		BasePrice = 12000,
+		BasePrice = 5000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_heavy_b_t12.png",
@@ -216,7 +216,7 @@ PS.Items = {
 	},
 	["gb5_chemical_napalm"] = {
 		Name = "Napalm Bomb",
-		BasePrice = 1750,
+		BasePrice = 650,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_chemical_napalm.png",
@@ -224,7 +224,7 @@ PS.Items = {
 	},
 	["gb5_heavy_b_1000lb"] = {
 		Name = "XMI HEB 1000lb",
-		BasePrice = 8000,
+		BasePrice = 3500,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_heavy_b_1000lb.png",
@@ -232,7 +232,7 @@ PS.Items = {
 	},
 	["gb5_heavy_b_thermobaric"] = {
 		Name = "GXM-11 Thermobaric",
-		BasePrice = 3500,
+		BasePrice = 1500,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_heavy_b_thermobaric.png",
@@ -240,7 +240,7 @@ PS.Items = {
 	},
 	["gb5_proj_howitzer_shell_in"] = {
 		Name = "Howitzer Shell (Incendiary)",
-		BasePrice = 350,
+		BasePrice = 200,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_proj_howitzer_shell_in.png",
@@ -248,7 +248,7 @@ PS.Items = {
 	},
 	["gb5_proj_howitzer_shell_cl"] = {
 		Name = "Chlorine Shell",
-		BasePrice = 500,
+		BasePrice = 300,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_proj_howitzer_shell_cl.png",
@@ -256,7 +256,7 @@ PS.Items = {
 	},
 	["gb5_nuclear_davycrockett"] = {
 		Name = "Davy Crockett",
-		BasePrice = 20000,
+		BasePrice = 10000,
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_nuclear_davycrockett.png",
@@ -265,63 +265,56 @@ PS.Items = {
 	---------------- Weapons ----------------
 	["m9k_minigun"] = {
 		Name = "M134 Minigun",
-		BasePrice = 1000,
+		BasePrice = 750,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_minigun.png",
 		Description = "Handheld minigun with extremely fast firerate and high ammo capacity. Very heavy.",
 	},
-	["m9k_barret_m82"] = {
-		Name = "Barret M82",
-		BasePrice = 1000,
-		Type = PS.ITEM_TYPE_WEAPON,
-		Icon = "entities/m9k_barret_m82.png",
-		Description = ".50 Caliber anti-materiel rifle. Capable of destroying light cover and damaging vehicles.",
-	},
 	["m9k_usas"] = {
 		Name = "USAS",
-		BasePrice = 500,
+		BasePrice = 250,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_usas.png",
 		Description = "Full auto shotgun with a 20 round drum mag. Has mediocre firerate but a fast reload.",
 	},
 	["m9k_striker12"] = {
 		Name = "Striker 12",
-		BasePrice = 450,
+		BasePrice = 100,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_striker12.png",
 		Description = "Full auto shotgun with a 12 round drum mag. Has a fast firerate but a slow reload and high recoil.",
 	},
 	["m9k_ex41"] = {
 		Name = "EX41",
-		BasePrice = 1200,
+		BasePrice = 750,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_ex41.png",
 		Description = "Pump-action grenade launcher. Has a 3-round tubular magazine.",
 	},
 	["m9k_m202"] = {
 		Name = "M202",
-		BasePrice = 5000,
+		BasePrice = 1500,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_m202.png",
 		Description = "Multishot explosive rocket launcher. Mixed anti-infantry and anti-armor capability.",
 	},
 	["m9k_matador"] = {
 		Name = "Matador",
-		BasePrice = 1000,
+		BasePrice = 500,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_matador.png",
 		Description = "Single shot rocket launcher specialized for anti-personnel use.",
 	},
 	["m9k_milkormgl"] = {
 		Name = "Milkor Mk1",
-		BasePrice = 1750,
+		BasePrice = 500,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_milkormgl.png",
 		Description = "Six-shot revolver-type grenade launcher.",
 	},
 	["m9k_nerve_gas"] = {
 		Name = "Nerve Gas",
-		BasePrice = 1000,
+		BasePrice = 750,
 		Type = PS.ITEM_TYPE_WEAPON,
 		Icon = "entities/m9k_nerve_gas.png",
 		Description = "Hand thrown capsule that releases a powerful nerve agent upon impact.",
@@ -351,7 +344,7 @@ PS.Items = {
 	},
 	["sci_passive_luckyfive"] = {
 		Name = "Lucky Five",
-		BasePrice = 200,
+		BasePrice = 100,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SPECIAL,
 		Icon = "hudicons/sci_passive_luckyfive.png",
@@ -359,7 +352,7 @@ PS.Items = {
 	},
 	["sci_passive_payday"] = {
 		Name = "Payday",
-		BasePrice = 350,
+		BasePrice = 300,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SPECIAL,
 		Icon = "hudicons/sci_passive_payday.png",
@@ -367,7 +360,7 @@ PS.Items = {
 	},
 	["sci_passive_doubledown"] = {
 		Name = "Double Down",
-		BasePrice = 1000,
+		BasePrice = 750,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SPECIAL,
 		Icon = "hudicons/sci_passive_doubledown.png",
@@ -415,7 +408,7 @@ PS.Items = {
 	},
 	["sci_passive_lifesteal"] = {
 		Name = "Lifesteal",
-		BasePrice = 1000,
+		BasePrice = 700,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
 		Icon = "hudicons/sci_passive_lifesteal.png",
@@ -439,7 +432,7 @@ PS.Items = {
 	},
 	["sci_passive_fleetfoot"] = {
 		Name = "Fleetfoot",
-		BasePrice = 225,
+		BasePrice = 100,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
 		Icon = "hudicons/sci_passive_fleetfoot.png",
@@ -471,7 +464,7 @@ PS.Items = {
 	},
 	["sci_passive_backstabber"] = {
 		Name = "Backstabber",
-		BasePrice = 450,
+		BasePrice = 100,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_OFFENSIVE,
 		Icon = "hudicons/sci_passive_backstabber.png",
@@ -495,7 +488,7 @@ PS.Items = {
 	},
 	["sci_passive_stealth"] = {
 		Name = "Stealth",
-		BasePrice = 700,
+		BasePrice = 500,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_OFFENSIVE,
 		Icon = "hudicons/sci_passive_stealth.png",
@@ -569,7 +562,7 @@ end
 --[[
 	["sci_pointshop_base_ewr_sentinel"] = {
 		Name = "Sentinel",
-		BasePrice = 1750,
+		BasePrice = 800,
 		Type = PS.ITEM_TYPE_ENTITY,
 		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
 		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
