@@ -1,7 +1,7 @@
 -- Vehicle spawn cooldown (LVS + simfphys)
 -- Install at: garrysmod/lua/autorun/server/sv_vehicle_cooldown.lua
 
-local COOLDOWN = 60          -- seconds between vehicle spawns
+local COOLDOWN = 10          -- seconds between vehicle spawns
 local ADMIN_BYPASS = false   -- set true to let admins ignore the cooldown
 
 local BLOCKED_BASES = {
