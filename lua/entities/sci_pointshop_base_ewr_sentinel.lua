@@ -23,7 +23,7 @@ ENT.AttachmentDrawDistance = 32000
 ENT.LabelDrawDistance = 300
 ENT.Decaytime = -1
 
-ENT.CableOffset = Vector(0, 0, -80)
+ENT.CableOffset = Vector(0, 0, -30)
 
 ENT.MaxHealth = 1500
 ENT.HealthRegen = 5
@@ -84,7 +84,7 @@ ENT.MaxShotsPerThink = 4             -- catch-up cap if the server tickrate is b
 -- simfphys_projectile moves `MuzzleVelocity` units per *nominal* tick
 -- (66.666/s) and defaults to 200, i.e. ~13333 u/s. This must match what
 -- the projectile really does, or every lead calculation is off.
-ENT.ProjectileSpeed = 11500          -- units/second; used for lead calculation
+ENT.ProjectileSpeed = 10500          -- units/second; used for lead calculation
 ENT.ProjectileDamage = 25
 ENT.ProjectileForce = 1
 ENT.ProjectileSize = 7
@@ -370,10 +370,19 @@ if SERVER then
 			self.CurrentTarget = ent
 			self:SetNWEntity("CurrentTarget", ent)
 
-			-- Locking onto a new target: hold fire while the turret
-			-- acquires it. The client turns toward it in the meantime.
 			if IsValid(ent) then
+				-- Locking onto a new target: hold fire while the turret
+				-- acquires it. The client turns toward it in the meantime.
 				self.AcquireEndTime = CurTime() + (self.TargetAcquisitionDelay or 0)
+
+				-- NextFireTime must not be left behind during the hold,
+				-- or the whole delay is "owed" as shots the moment it ends.
+				self.NextFireTime = self.AcquireEndTime
+			elseif (self.BurstShotsFired or 0) > 0 then
+				-- Target lost without going through ClearTarget (e.g. the
+				-- scan returned nothing): end the half-finished burst
+				-- instead of leaving it dangling with stale timers.
+				self:EndBurst()
 			end
 		end
 	end
@@ -686,6 +695,8 @@ if SERVER then
 	-- a player who hasn't declared themselves friendly.
 	function ENT:IsTargetableClass(ent)
 		if ent:IsPlayer() then
+			-- Players in buildmode are never targeted.
+			if ent.buildmode then return false end
 			return not self:IsFriendly(ent)
 		end
 
@@ -1037,6 +1048,15 @@ if SERVER then
 		-- The first round of a burst goes out immediately.
 		if (self.BurstShotsFired or 0) == 0 then
 			self.NextFireTime = now
+		end
+
+		-- Never owe more than about one tick of shots. A stale NextFireTime
+		-- (server hitch, power/active toggled mid-burst, target swap) would
+		-- otherwise be repaid as MaxShotsPerThink rounds per tick from the
+		-- same spot -- the "shotgun" effect. Drop the backlog instead.
+		local maxLag = math.max(delay, engine.TickInterval())
+		if self.NextFireTime < now - maxLag then
+			self.NextFireTime = now - maxLag
 		end
 
 		local fired = 0

@@ -23,7 +23,7 @@ ENT.AttachmentDrawDistance = 32000
 ENT.LabelDrawDistance = 300
 ENT.Decaytime = -1
 
-ENT.CableOffset = Vector(0, 0, -80)
+ENT.CableOffset = Vector(0, 0, -30)
 
 ENT.MaxHealth = 2000
 ENT.HealthRegen = 5
@@ -723,6 +723,8 @@ if SERVER then
 	-- above), same as the sentry turret.
 	function ENT:IsTargetableClass(ent)
 		if ent:IsPlayer() then
+			-- Players in buildmode are never targeted.
+			if ent.buildmode then return false end
 			return not self:IsFriendly(ent)
 		end
 

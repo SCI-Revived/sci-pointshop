@@ -636,6 +636,7 @@ if SERVER then
 
             if IsValid(target)
                 and target:Alive()
+                and not target.buildmode
                 and not self:IsFriendly(target) then
 
                 -- Considers the target's whole hitbox (feet through
@@ -761,6 +762,7 @@ if SERVER then
 
                     local stillValid =
                         self.Target:Alive()
+                        and not self.Target.buildmode
                         and not self:IsFriendly(self.Target)
 
                     if stillValid then
