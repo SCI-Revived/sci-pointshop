@@ -6,6 +6,7 @@ include("pointshop/server/sv_core.lua")
 include("pointshop/server/sv_joinbonus.lua")
 include("pointshop/server/sv_killtracker.lua")
 include("pointshop/server/sv_playreward.lua")
+include("pointshop/server/sv_pointshopconcommands.lua")
 
 AddCSLuaFile("pointshop/client/cl_hud.lua")
 AddCSLuaFile("pointshop/client/cl_killfeed.lua")
