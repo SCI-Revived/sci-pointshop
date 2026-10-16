@@ -37,6 +37,8 @@ local function IsLimitedClass(class)
 end
 
 local function Bypasses(ply)
+    -- Players in buildmode are never affected by the cooldown
+    if ply.buildmode then return true end
     return ADMIN_BYPASS and ply:IsAdmin()
 end
 
