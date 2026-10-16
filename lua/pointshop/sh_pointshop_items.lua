@@ -252,6 +252,14 @@ PS.Items = {
 		Icon = "entities/gb5_heavy_b_thermobaric.png",
 		Description = "Thermobaric bomb with a large blast radius. Will deal average damage to bases but high anti-personnel damage.",
 	},
+	["gb5_heavy_cbu"] = {
+		Name = "CBU-52U",
+		BasePrice = 1500,
+		Type = PS.ITEM_TYPE_ENTITY,
+		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
+		Icon = "entities/gb5_heavy_cbu.png",
+		Description = "Free-fall cluster bomb for use against soft-skinned targets, light vehicles, and personnel",
+	},
 	["gb5_proj_howitzer_shell_in"] = {
 		Name = "Howitzer Shell (Incendiary)",
 		BasePrice = 200,
