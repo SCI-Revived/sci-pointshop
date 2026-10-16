@@ -163,6 +163,13 @@ PS.Items = {
 		Icon = "entities/sci_pointshop_base_ewr_interceptor.png",
 		Description = "Motion based SAM platform that intercepts players and incoming GBombs munitions. Can retain up to 4 targets at once. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 200 power in order to run.",
 	},
+	["sci_pointshop_base_ewr_sentinel"] = {
+		Name = "Sentinel",
+		BasePrice = 800,
+		Type = PS.ITEM_TYPE_ENTITY,
+		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
+		Description = "Motion based AAA platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 125 power in order to run.",
+	},
 	["lvs_vehicle_air_refil"] = {
 		Name = "Ammo Refill Balloon",
 		BasePrice = 250,
@@ -493,6 +500,22 @@ PS.Items = {
 		Icon = "hudicons/sci_passive_bleed.png",
 		Description = "Small chance to make target bleed when shot.",
 	},
+	["sci_passive_hollowpoint"] = {
+		Name = "Hollow Point",
+		BasePrice = 750,
+		Type = PS.ITEM_TYPE_BONUS,
+		BonusType = PS.BONUS_TYPE_OFFENSIVE,
+		Icon = "hudicons/sci_passive_hollowpoint.png",
+		Description = "Your bullets apply a stacking debuff to targets that causes them to take increased damage. +5% per stack.",
+	},
+	["sci_passive_dartcrossbow"] = {
+		Name = "Dart Crossbow",
+		BasePrice = 350,
+		Type = PS.ITEM_TYPE_BONUS,
+		BonusType = PS.BONUS_TYPE_OFFENSIVE,
+		Icon = "hudicons/sci_passive_dartcrossbow.png",
+		Description = "Replaces your crossbow bolts with poisonous darts that deal less damage but prevent healing and reduce their outgoing damage.",
+	},
 	["sci_passive_stealth"] = {
 		Name = "Stealth",
 		BasePrice = 500,
@@ -565,13 +588,3 @@ function PS.GetEntityItemsByCategory()
 
 	return grouped
 end
-
---[[
-	["sci_pointshop_base_ewr_sentinel"] = {
-		Name = "Sentinel",
-		BasePrice = 800,
-		Type = PS.ITEM_TYPE_ENTITY,
-		Icon = "entities/sci_pointshop_base_ewr_sentinel.png",
-		Description = "Motion based CIWS platform that intercepts players and incoming GBombs munitions. Players must be manually whitelisted to be considered friendly. Must be placed outside. Requires 125 power in order to run.",
-	},
-]]--

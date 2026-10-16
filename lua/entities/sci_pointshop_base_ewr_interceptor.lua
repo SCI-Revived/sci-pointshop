@@ -10,11 +10,11 @@ ENT.AdminOnly = true
 ENT.Category = "Pointshop Entities"
 
 ENT.IconPath = "entities/sci_pointshop_base_ewr_interceptor.png"
-ENT.IconOffset = Vector(120, 0, -15)
+ENT.IconOffset = Vector(120, 0, 15)
 
 -- The fixed base plate (never moves). Placeholder model: swap freely, but
 -- keep PLATE_TOP in the launcher rig section below in step with its top face.
-ENT.BaseModel = "models/hunter/blocks/cube4x4x4.mdl"
+ENT.BaseModel = "models/hunter/blocks/cube4x4x2.mdl"
 ENT.BaseMaterial = "models/effects/intro_tearshape"
 ENT.BaseColor = Color(80, 90, 100, 255)
 ENT.BoneScale = Vector(1, 1, 1)
@@ -136,7 +136,7 @@ ENT.LauncherPitchSpeed = 90
 ENT.LauncherPitchSign = 1
 
 -- Placeholder geometry, tune to taste / to your real models.
-local PLATE_TOP = -80.5           -- top face of the base plate, relative to the entity origin
+local PLATE_TOP = -28.5           -- top face of the base plate, relative to the entity origin
 local PIVOT_HEIGHT = 38         -- yaw axis -> pitch axis
 local MISSILE_SPACING = 40      -- centre to centre, side by side
 local MISSILE_HEIGHT = 12        -- missile axis above the pitch pivot
@@ -265,7 +265,7 @@ ENT.Attachments = {
     {
         ID = 11,
         Model = "models/props_phx/misc/potato_launcher_cap.mdl",
-        Pos = Vector(0, 0, -95),
+        Pos = Vector(0, 0, -45),
         Angle = Angle(0, 0, 0),
         Color = Color(150, 150, 150),
         Material = "metal2a",
@@ -277,7 +277,7 @@ ENT.Attachments = {
     {
         ID = 12,
         Model = "models/xqm/pistontype1big.mdl",
-        Pos = Vector(0, 0, -60),
+        Pos = Vector(0, 0, 0),
         Angle = Angle(0, 0, 180),
         Color = Color(150, 150, 150),
         Material = "metal2a",
@@ -993,8 +993,13 @@ if SERVER then
 		missile:Spawn()
 		missile:Activate()
 
-		missile:SetAttacker(self)
-		missile:SetInflictor(self)
+		-- Credit the interceptor's owner, not the entity itself.
+		-- Fall back to the interceptor if the owner is gone (disconnected/unowned).
+		local owner = self:GetEntityOwner(self)
+		local attacker = (IsValid(owner) and owner:IsPlayer()) and owner or self
+
+		missile:SetAttacker(attacker)
+		missile:SetInflictor(missile)   -- or self, if you want the kill feed to show the turret
 		missile:SetLockOn(target)
 		missile:SetProximityFuse(self.MissileProximityFuse or 200)
 

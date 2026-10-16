@@ -304,9 +304,9 @@ if SERVER then
     local FOV = 90                 -- degrees, full cone width
     local Range = 3000             -- units
 
-    local Damage = 8
+    local Damage = 12
     local BulletsPerShot = 1
-    local Spread = 0.035           -- FireBullets cone, keeps it from being a laser
+    local Spread = 0.03           -- FireBullets cone, keeps it from being a laser
     local FireSound = "BlackVulcan.Single"
     local SpotSound = "npc/scanner/combat_scan2.wav"
 
@@ -674,6 +674,31 @@ if SERVER then
         net.SendPVS(self:GetPos())
     end
 
+	-- Best-effort owner lookup: CPPI (prop protection), engine owner,
+	-- creator, then networked/plain "Owner" fields.
+	function ENT:GetOwnerPlayer()
+		if self.CPPIGetOwner then
+			local owner = self:CPPIGetOwner()
+			if IsValid(owner) and owner:IsPlayer() then return owner end
+		end
+
+		local owner = self:GetOwner()
+		if IsValid(owner) and owner:IsPlayer() then return owner end
+
+		if self.GetCreator then
+			owner = self:GetCreator()
+			if IsValid(owner) and owner:IsPlayer() then return owner end
+		end
+
+		owner = self:GetNWEntity("Owner", NULL)
+		if IsValid(owner) and owner:IsPlayer() then return owner end
+
+		owner = self.Owner
+		if isentity(owner) and IsValid(owner) and owner:IsPlayer() then return owner end
+
+		return NULL
+	end
+
     function ENT:FireAt(target)
 
         local eyePos = self:GetTurretEyePos()
@@ -695,21 +720,24 @@ if SERVER then
 
         self:PlayMuzzleFlash(dir)
 
-        local bullet = {}
-        bullet.Num = BulletsPerShot
-        bullet.Src = eyePos
-        bullet.Dir = dir
-        bullet.Spread = Vector(Spread, Spread, 0)
-        bullet.Tracer = 1
-        bullet.TracerName = "Tracer"
-        bullet.Force = 1
-        bullet.Damage = Damage
-        bullet.Attacker = self
-        bullet.Callback = function(attacker, tr, dmginfo)
-            dmginfo:SetInflictor(self)
-        end
+		local owner = self:GetOwnerPlayer()
+		local attacker = IsValid(owner) and owner or self
 
-        self:FireBullets(bullet)
+		local bullet = {}
+		bullet.Num = BulletsPerShot
+		bullet.Src = eyePos
+		bullet.Dir = dir
+		bullet.Spread = Vector(Spread, Spread, 0)
+		bullet.Tracer = 1
+		bullet.TracerName = "Tracer"
+		bullet.Force = 1
+		bullet.Damage = Damage
+		bullet.Attacker = attacker
+		bullet.Callback = function(att, tr, dmginfo)
+			dmginfo:SetInflictor(self)   -- kill feed still shows the turret
+		end
+
+		self:FireBullets(bullet)
         self:EmitSound(FireSound)
     end
 

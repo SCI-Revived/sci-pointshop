@@ -10,10 +10,10 @@ ENT.AdminOnly = true
 ENT.Category = "Pointshop Entities"
 
 ENT.IconPath = "entities/sci_pointshop_base_ewr_sentinel.png"
-ENT.IconOffset = Vector(120, 0, -15)
+ENT.IconOffset = Vector(120, 0, 15)
 
 -- Placeholder model: swap freely.
-ENT.BaseModel = "models/hunter/blocks/cube4x4x4.mdl"
+ENT.BaseModel = "models/hunter/blocks/cube4x4x2.mdl"
 ENT.BaseMaterial = "models/effects/intro_tearshape" --models/effects/intro_tearshape
 ENT.BaseColor = Color(80, 90, 100, 255)
 ENT.BoneScale = Vector(1, 1, 1)
@@ -47,6 +47,12 @@ ENT.MinTargetDistance = 300     -- dead zone around the gun
 ENT.MinTargetSpeed = 50       -- ignore anything slower than this
 ENT.ScanInterval = 0.25         -- how often to look for / re-rank targets
 
+-- Seconds between locking onto a new target and the first round leaving
+-- the barrels. The turret still slews toward the target during this time
+-- (and the lead estimate warms up); it just doesn't shoot yet. Applies
+-- every time the engaged target changes, including after a reload.
+ENT.TargetAcquisitionDelay = 0.6
+
 ENT.DetectionSphereColor = Color(255, 160, 40, 15)
 ENT.DetectionSphereColorWire = Color(255, 160, 40, 200)
 
@@ -60,17 +66,17 @@ ENT.SphereDrawDistance = 26000
 ENT.ShowRangeGrid = true
 
 ENT.TargetClassPrefix = "gb5_"
-ENT.TARGET_PRIORITY_PLAYER = 1
-ENT.TARGET_PRIORITY_PREFIXED = 2
+ENT.TARGET_PRIORITY_PLAYER = 2
+ENT.TARGET_PRIORITY_PREFIXED = 1
 
 -- Gun
 ENT.MuzzleOffset = Vector(0, 0, 40)  -- local to the entity; only a fallback, rounds normally leave from the MuzzleAttachmentIDs slots below
 ENT.FireSound = "apc_fire"
 ENT.FireDelay = 0.05               -- seconds between shots (60 / 3400 RPM)
 ENT.BurstSize = 40                   -- rounds per burst
-ENT.BurstDelay = 2                   -- seconds from the end of one burst to the start of the next
+ENT.BurstDelay = 1.25                   -- seconds from the end of one burst to the start of the next
 ENT.MagazineSize = 120                -- 3 bursts per magazine
-ENT.ReloadDuration = 6               -- seconds
+ENT.ReloadDuration = 5               -- seconds
 ENT.Spread = 0.5                    -- degrees, random cone half-angle
 ENT.MaxShotsPerThink = 4             -- catch-up cap if the server tickrate is below the fire rate
 
@@ -160,7 +166,7 @@ ENT.TurretPitchSign = 1
 -- Placeholder geometry (units). Everything is a cube shaped with
 -- AxisScale, so Dim() takes real sizes: length (forward), width
 -- (left-right), height. Swap models/colors freely.
-local PLATE_TOP = -80.5            -- top face of the base plate, relative to the entity origin
+local PLATE_TOP = -50.5            -- top face of the base plate, relative to the entity origin
 local BLOCK = "models/hunter/blocks/cube025x025x025.mdl"
 local BLOCK_SIZE = 11.875          -- edge length of BLOCK
 
@@ -228,11 +234,12 @@ end
 local HULL = Pivot(0, Vector(0, 0, PLATE_TOP))
 
 for _, side in ipairs({ 1, -1 }) do
-	Part(HULL, Vector(0, side * 40, TRACK_H / 2), Dim(168, 22, TRACK_H), DARK_COLOR)
+	Part(HULL, Vector(0, side * 55, TRACK_H / 1.25), Dim(110, 12, TRACK_H + 12), HULL_COLOR, Angle(0, 0, side * -10))
 end
 
-Part(HULL, Vector(0, 0, TRACK_H + DECK_H / 2), Dim(164, 102, DECK_H), HULL_COLOR)
-Part(HULL, Vector(84, 0, TRACK_H + 2), Dim(30, 102, 16), HULL_COLOR, Angle(-30, 0, 0)) -- sloped nose
+Part(HULL, Vector(0, 0, TRACK_H + DECK_H / 2), Dim(90, 102, DECK_H), HULL_COLOR)
+Part(HULL, Vector(55, 0, TRACK_H - 6), Dim(30, 102, 12), HULL_COLOR, Angle(-70, 0, 0)) -- sloped nose
+Part(HULL, Vector(-55, 0, TRACK_H - 6), Dim(30, 102, 12), HULL_COLOR, Angle(70, 0, 0)) -- sloped nose
 
 -- Yaw pivot. Angle.y is animated on the client (see ENT:Think below).
 local YAW = Pivot(0, Vector(0, 0, PLATE_TOP))
@@ -328,6 +335,7 @@ if SERVER then
 		self.NextScanTime = 0
 		self.NextFireTime = 0
 		self.NextBurstTime = 0
+		self.AcquireEndTime = 0 -- no shots before this time (see TargetAcquisitionDelay)
 		self.BurstShotsFired = 0
 		self.ReloadEndTime = 0
 
@@ -361,6 +369,12 @@ if SERVER then
 		if self.CurrentTarget ~= ent then
 			self.CurrentTarget = ent
 			self:SetNWEntity("CurrentTarget", ent)
+
+			-- Locking onto a new target: hold fire while the turret
+			-- acquires it. The client turns toward it in the meantime.
+			if IsValid(ent) then
+				self.AcquireEndTime = CurTime() + (self.TargetAcquisitionDelay or 0)
+			end
 		end
 	end
 
@@ -985,12 +999,15 @@ if SERVER then
 
 		self:EmitSound(self.FireSound or "apc_fire")
 
+		local owner = self:GetEntityOwner(self)
+		local attacker = (IsValid(owner) and owner:IsPlayer()) and owner or self
+
 		simfphys.FirePhysProjectile({
 			filter = { self },
 			shootOrigin = origin,
 			shootDirection = aimAngles:Forward(),
-			attacker = self,
-			attackingent = self,
+			attacker = attacker,
+			attackingent = self,   -- inflictor: kill feed still shows the sentinel
 			Damage = self.ProjectileDamage or 100,
 			Force = self.ProjectileForce or 50,
 			Size = self.ProjectileSize or 3,
@@ -1096,7 +1113,10 @@ if SERVER then
 					self:UpdateTracking(target, currentTime)
 					self:UpdateAim(target)
 
-					if currentTime >= (self.NextBurstTime or 0) then
+					-- Aim (above) runs every tick, but no round leaves until
+					-- the target has been acquired for TargetAcquisitionDelay.
+					if currentTime >= (self.NextBurstTime or 0)
+						and currentTime >= (self.AcquireEndTime or 0) then
 						self:FireBurstStep(target, currentTime)
 
 						if self.State == "reloading" then

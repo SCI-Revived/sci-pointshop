@@ -801,3 +801,108 @@ PassiveEffects.sci_passive_stealth = {
     Icon = "hudicons/sci_passive_stealth.png",
     Desc = "Attacking does not reveal your position on the minimap. Does not work while in vehicles."
 }
+
+PassiveEffects.sci_passive_hollowpoint = {
+    Name = "Hollow Point",
+    Icon = "hudicons/sci_passive_hollowpoint.png",
+    Desc = "Your bullets apply a stacking debuff to targets that causes them to take increased damage. +5% per stack.",
+    ServerHooks = {
+        {
+            HookType = "EntityTakeDamage",
+            HookFunction = function(target, dmginfo)
+
+                local attacker = dmginfo:GetAttacker()
+
+                if not IsValid(attacker)
+                or not attacker:IsPlayer()
+                or not attacker:HavePassive("sci_passive_hollowpoint") then
+                    return
+                end
+
+                if not dmginfo:IsDamageType(DMG_BULLET) then
+                    return
+                end
+
+                if attacker == target then
+                    return
+                end
+
+                if not IsValid(target)
+                or not (target:IsPlayer() or target:IsNPC()) then
+                    return
+                end
+
+				target:ApplyEffect("sci_effect_hollowpointwound", 10)
+				target:AddSEFStacks("sci_effect_hollowpointwound", 1)
+            end
+        }
+    }
+}
+
+StatusEffects.sci_effect_hollowpointwound = {
+    Name = "Hollow Point Wound",
+    Icon = "SEF_Icons/deepwound.png",
+    Desc = "Each wound stack causes you to take increased damage. +5% per stack.",
+    Type = "DEBUFF",
+    Stackable = true,
+    ServerHooks = {
+        {
+            HookType = "EntityTakeDamage",
+            HookFunction = function(ent, dmg, taken)
+                local stacks = ent:GetSEFStacks("sci_effect_hollowpointwound")
+                if stacks and stacks > 0 then
+                    dmg:ScaleDamage(1 + (0.05 * stacks))
+                end
+            end,
+        }
+    }
+}
+
+-- Config: change these to taste
+local BOLT_EFFECT        = "sci_effect_bleed"  -- <-- your status effect ID
+local BOLT_EFFECT_TIME   = 10                  -- duration in seconds
+local BOLT_EFFECT_STACKS = 1                   -- set to 0 to skip stacking
+
+PassiveEffects.sci_passive_dartcrossbow = {
+    Name = "Dart Crossbow",
+    Icon = "hudicons/sci_passive_dartcrossbow.png",
+    Desc = "Replaces your crossbow bolts with poisonous darts that deal less damage but prevent healing and reduce their outgoing damage.",
+    ServerHooks = {
+        {
+            HookType = "EntityTakeDamage",
+            HookFunction = function(target, dmginfo)
+
+                local attacker = dmginfo:GetAttacker()
+                local inflictor = dmginfo:GetInflictor()
+
+                if not IsValid(attacker)
+                or not attacker:IsPlayer()
+                or not attacker:HavePassive("sci_passive_dartcrossbow") then
+                    return
+                end
+
+                -- Crossbow bolts: the inflictor is the bolt entity
+                if not IsValid(inflictor)
+                or inflictor:GetClass() ~= "crossbow_bolt" then
+                    return
+                end
+
+                if attacker == target then
+                    return
+                end
+
+                if not IsValid(target)
+                or not (target:IsPlayer() or target:IsNPC()) then
+                    return
+                end
+
+                -- Override bolt damage
+                dmginfo:SetDamage(25)
+
+                -- Apply the status effect
+                target:ApplyEffect("Poison", 10, 5, 2)
+                target:ApplyEffect("DamageDown", 10, 50)
+            end
+        }
+    }
+}
