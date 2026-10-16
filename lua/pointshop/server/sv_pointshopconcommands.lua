@@ -20,8 +20,9 @@ local function Reply(caller, msg)
 	msg = "[PointShop] " .. msg
 
 	if IsValid(caller) then
+		-- Only one print: HUD_PRINTTALK also echoes to the console, so using
+		-- both (or TALK alone) would show the message multiple times.
 		caller:PrintMessage(HUD_PRINTCONSOLE, msg)
-		caller:PrintMessage(HUD_PRINTTALK, msg)
 	else
 		print(msg)
 	end
