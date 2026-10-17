@@ -258,7 +258,7 @@ PS.Items = {
 		Type = PS.ITEM_TYPE_ENTITY,
 		EntityCategory = PS.ENTITY_CATEGORY_BOMB,
 		Icon = "entities/gb5_heavy_cbu.png",
-		Description = "Free-fall cluster bomb for use against soft-skinned targets, light vehicles, and personnel",
+		Description = "Free-fall cluster bomb for use against soft-skinned targets, light vehicles, and personnel.",
 	},
 	["gb5_proj_howitzer_shell_in"] = {
 		Name = "Howitzer Shell (Incendiary)",
