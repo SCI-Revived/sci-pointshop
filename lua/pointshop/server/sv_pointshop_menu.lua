@@ -47,7 +47,7 @@ end
 
 -- Delivery
 -- Spawns entity on the ground in front of the player, using a trace so it doesn't spawn inside geometry. Returns the spawned entity, or nil if it failed to create.
-local function SpawnEntityInFront(ply, class)
+local function SpawnEntityInFront(ply, class, item)
 	-- Check the player's scripted entity limit.
 	if not ply:CheckLimit("sents") then
 		return nil
@@ -76,6 +76,11 @@ local function SpawnEntityInFront(ply, class)
 
 	if ent.SetCreator then
 		ent:SetCreator(ply)
+	end
+
+	-- GBombs entities read GBOWNER as the attacker for damage/kill credit (e.g. util.BlastDamage errors if it's nil). Must be set before Spawn() so it's available to anything that runs during Initialize.
+	if item and PS.GetItemEntityCategory and PS.GetItemEntityCategory(item) == PS.ENTITY_CATEGORY_BOMB then
+		ent.GBOWNER = ply
 	end
 
 	ent:Spawn()
@@ -113,7 +118,7 @@ end
 
 function PS.Shop.DeliverItem(ply, buyable_class, item)
 	if item.Type == PS.ITEM_TYPE_ENTITY then
-		local ent = SpawnEntityInFront(ply, buyable_class)
+		local ent = SpawnEntityInFront(ply, buyable_class, item)
 		if not IsValid(ent) then
 			return false, "Failed to spawn entity."
 		end
