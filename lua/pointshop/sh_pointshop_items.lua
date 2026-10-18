@@ -285,6 +285,13 @@ PS.Items = {
 		Description = "Miniature nuclear artillery shell with a devastating blast.",
 	},
 	---------------- Weapons ----------------
+	["keypad_cracker"] = {
+		Name = "Keypad Cracker",
+		BasePrice = 100,
+		Type = PS.ITEM_TYPE_WEAPON,
+		Icon = "icon16/key_delete.png",
+		Description = "Allows you to hack keypads and open base doors.",
+	},
 	["m9k_minigun"] = {
 		Name = "M134 Minigun",
 		BasePrice = 750,
