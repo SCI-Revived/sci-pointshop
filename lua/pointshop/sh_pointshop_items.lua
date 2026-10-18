@@ -412,14 +412,6 @@ PS.Items = {
 		Icon = "hudicons/sci_passive_regeneration.png",
 		Description = "Passive HP regeneration.",
 	},
-	["sci_passive_extraarmor"] = {
-		Name = "Extra Armor",
-		BasePrice = 500,
-		Type = PS.ITEM_TYPE_BONUS,
-		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
-		Icon = "hudicons/sci_passive_extraarmor.png",
-		Description = "+25 max Armor",
-	},
 	["sci_passive_armorregeneration"] = {
 		Name = "Armor Regeneration",
 		BasePrice = 350,
@@ -596,3 +588,14 @@ function PS.GetEntityItemsByCategory()
 
 	return grouped
 end
+
+--[[
+	["sci_passive_extraarmor"] = {
+		Name = "Extra Armor",
+		BasePrice = 500,
+		Type = PS.ITEM_TYPE_BONUS,
+		BonusType = PS.BONUS_TYPE_SURVIVABILITY,
+		Icon = "hudicons/sci_passive_extraarmor.png",
+		Description = "+25 max Armor",
+	},
+]]--
