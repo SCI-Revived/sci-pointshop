@@ -40,8 +40,8 @@ if SERVER then
 	end
 	
 	function ENT:FollowTarget( followent )
-		local speed = (self:GetStartVelocity() + (self:GetDirtyMissile() and 3000 or 2500)) * 1.25
-		local turnrate = ((self:GetCleanMissile() or self:GetDirtyMissile()) and 250 or 150) * 0.25
+		local speed = (self:GetStartVelocity() + (self:GetDirtyMissile() and 3000 or 2500)) * 1.35
+		local turnrate = ((self:GetCleanMissile() or self:GetDirtyMissile()) and 250 or 150) * 0.2
 		
 		local TargetPos = followent:LocalToWorld( followent:OBBCenter() )
 		
@@ -125,7 +125,7 @@ if SERVER then
 		local Inflictor = self:GetInflictor()
 		local Attacker = self:GetAttacker()
 
-		util.BlastDamage( IsValid( Inflictor ) and Inflictor or Entity(0), IsValid( Attacker ) and Attacker or Entity(0), self:GetPos(),1000,1000)
+		util.BlastDamage( IsValid( Inflictor ) and Inflictor or Entity(0), IsValid( Attacker ) and Attacker or Entity(0), self:GetPos(),1000,750)
 	end
 
 	-- true if the missile is within the proximity fuse distance of its target
