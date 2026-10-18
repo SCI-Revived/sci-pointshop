@@ -40,8 +40,8 @@ if SERVER then
 	end
 	
 	function ENT:FollowTarget( followent )
-		local speed = (self:GetStartVelocity() + (self:GetDirtyMissile() and 3000 or 2500)) * 1.4
-		local turnrate = ((self:GetCleanMissile() or self:GetDirtyMissile()) and 250 or 150) * 0.35
+		local speed = (self:GetStartVelocity() + (self:GetDirtyMissile() and 3000 or 2500)) * 1.25
+		local turnrate = ((self:GetCleanMissile() or self:GetDirtyMissile()) and 250 or 150) * 0.25
 		
 		local TargetPos = followent:LocalToWorld( followent:OBBCenter() )
 		
@@ -161,7 +161,7 @@ if SERVER then
 		end
 
 		-- lifetime expired: detonate with full damage (unless the missile was shot down)
-		if (self.SpawnTime + 8.5) < curtime then
+		if (self.SpawnTime + 6.5) < curtime then
 			if not self:GetDisabled() then
 				self.Explode = true
 			else
