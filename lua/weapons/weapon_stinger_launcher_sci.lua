@@ -30,8 +30,8 @@ SWEP.Secondary.DefaultClip	= -1
 SWEP.Secondary.Automatic		= false
 SWEP.Secondary.Ammo		= "none"
 
-local LOCK_TIME  = 3   -- seconds on target before lock (was 2)
-local LOCK_RANGE = 30000  -- max lock distance (was 15000)
+local LOCK_TIME  = 3.5   -- seconds on target before lock (was 2)
+local LOCK_RANGE = 25000  -- max lock distance (was 15000)
 local LOCK_CONE  = 20      -- degrees from crosshair (was 5)
 
 function SWEP:SetupDataTables()
