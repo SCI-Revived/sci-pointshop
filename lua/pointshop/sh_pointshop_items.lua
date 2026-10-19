@@ -365,7 +365,7 @@ PS.Items = {
 	---------------- Bonuses (passive effects) ----------------
 	["sci_passive_lifeinsurance"] = {
 		Name = "Life Insurance",
-		BasePrice = 500,
+		BasePrice = 200,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SPECIAL,
 		Icon = "hudicons/sci_passive_lifeinsurance.png",
@@ -373,7 +373,7 @@ PS.Items = {
 	},
 	["sci_passive_luckyfive"] = {
 		Name = "Lucky Five",
-		BasePrice = 100,
+		BasePrice = 25,
 		Type = PS.ITEM_TYPE_BONUS,
 		BonusType = PS.BONUS_TYPE_SPECIAL,
 		Icon = "hudicons/sci_passive_luckyfive.png",
